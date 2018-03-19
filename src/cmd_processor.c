@@ -52,6 +52,5 @@ char **parse_cmd_args(char *full_cmd) {
     }
 
     ret[count - 1] = NULL;
-
     return ret;
 }

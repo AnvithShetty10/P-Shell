@@ -9,8 +9,9 @@
 /* -------------------- System Libraries -------------------- */
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/syslimits.h>
-
+#include<limits.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 
 /* -------------------- Macros -------------------- */
 #define USERNAME_LIMIT 256          // Default username length limit 256 bytes

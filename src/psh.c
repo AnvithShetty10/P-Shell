@@ -1,5 +1,5 @@
 /*
-This file contains the main function of `Pista` shell, along with other functions related to processing output strings like the welcome message and string prompt.
+This filain function of `Pista` shell, along with other functions related to processing output strings like the welcome message and string promptp.
 */
 
 /* -------------------- Includes -------------------- */
@@ -8,42 +8,64 @@ This file contains the main function of `Pista` shell, along with other function
 #include "cmd_processor.h"
 #include "dir_stuff.h"
 
-
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
     print_welcome_message();
 
-    char *check_input = NULL, *path_to_exec = NULL;
+    char *check_input = NULL;
     char **cmd_args = NULL, **paths_table = NULL;
-    int i = 0;
+    int i = 0,status=0;
+    pid_t pid;
 
     char *buf = (char *)malloc(sizeof(char) * BUF_SIZE_LIMIT);
-
+    char *path_to_exec = (char *)malloc(sizeof(char)*PATH_MAX);
     do {
         print_prompt();
         check_input = fgets(buf, BUF_SIZE_LIMIT, stdin);    // returns NULL if EOF is found (CTRL-D)
-        if(!check_input) {
             cmd_args = parse_cmd_args(buf);
-            paths_table = paths();
+            paths_table = paths();            
             
             while(paths_table[i]) {
                 // get path to executable by searching for cmd_args[0] in paths_table[i] and put it into path_to_exec
                 // check if cmd_args[0] exists using the function "file_exists" from "dir_stuff"
                 // if it does, make the string, path_to_exec = paths_table[i] + cmd_args[0]
-                
+
+                    
+                        if (file_exists(paths_table[i], cmd_args[0])==0) {
+                            strcpy(path_to_exec,paths_table[i]);
+                            strcat(path_to_exec, cmd_args[0]);
+
+                            
+                        }
+                    
+                                    
                 ++i;
             }
-
             // fork and exec the path_to_exec with args from cmd_args (use cmd_args + 1 since cmd_args[0] is the command itself)
-
-            free(cmd_args);
-            free(path_to_exec);
+            pid=fork();
+            if(pid<0) {
+                perror("fork error");
+            }
+            
+            else if(pid==0)
+            {   printf("test=%s\n",path_to_exec );
+                execv(path_to_exec,cmd_args+1);
+                free(path_to_exec);
+                free(cmd_args);
+                
+                exit(0);
+            }            
+            else{
+                //printf("test=%d\n",pid );
+                wait(&status);
+                
+            }
+            //free(path_to_exec);
+            //free(cmd_args);
+            
             //free(paths_table);    //commented since paths_table is constant for now!
-        }
-
+        
     }while(check_input);
-
-    printf("\n");
     free(buf);
     return 0;
 }

@@ -10,10 +10,10 @@
 /* -------------------- System Libraries -------------------- */
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/syslimits.h>
 #include <sys/types.h>
+#include<limits.h>
 #include <sys/dir.h>
-
+#include <sys/wait.h>
 
 /* -------------------- Macros -------------------- */
 
