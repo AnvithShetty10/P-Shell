@@ -10,14 +10,17 @@ This file handles everything related to command string processing, such as, extr
 
 /* Error logger function for THIS file ONLY. */
 static void error_log(char *fmt, ...) {
+#ifdef DEBUG_MODE
     va_list args;
     va_start(args, fmt);
 
+    printf("\n");
     printf("CMD PROCESSOR : ");
     vprintf(fmt, args);
     printf("\n");
 
     va_end(args);
+#endif
 }
 
 
@@ -52,5 +55,16 @@ char **parse_cmd_args(char *full_cmd) {
     }
 
     ret[count - 1] = NULL;
+
+    // Printing all arguments for debugging
+    #ifdef DEBUG_MODE
+    int i = 0;
+    temp = *(ret + i);
+    while(temp) {
+        error_log("%s", temp);
+        temp = *(ret + ++i);
+    }
+    #endif
+
     return ret;
 }

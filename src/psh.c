@@ -8,65 +8,87 @@ This filain function of `Pista` shell, along with other functions related to pro
 #include "cmd_processor.h"
 #include "dir_stuff.h"
 
+
+/* -------------------- Macros -------------------- */
+#define getlogin() getpwuid(getuid())->pw_name
+
+/* Error logger function for THIS file ONLY. */
+static void error_log(char *fmt, ...) {
+#ifdef DEBUG_MODE
+    va_list args;
+    va_start(args, fmt);
+
+    printf("\n");
+    printf("MAIN PSH : ");
+    vprintf(fmt, args);
+    printf("\n");
+
+    va_end(args);
+#endif
+}
+
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
     print_welcome_message();
 
     char *check_input = NULL;
     char **cmd_args = NULL, **paths_table = NULL;
-    int i = 0,status=0;
+    int i = 0, status = 0, len;
     pid_t pid;
 
     char *buf = (char *)malloc(sizeof(char) * BUF_SIZE_LIMIT);
-    char *path_to_exec = (char *)malloc(sizeof(char)*PATH_MAX);
+    char *path_to_exec = (char *)malloc(sizeof(char) * PATH_MAX);
+
     do {
         print_prompt();
         check_input = fgets(buf, BUF_SIZE_LIMIT, stdin);    // returns NULL if EOF is found (CTRL-D)
+        len = strlen(buf);
+        
+        //error_log("Input taken : %p %s %d", check_input, buf, len);
+        if(check_input && len > 1) {
+            buf[len-1] = 0;     // remove trailing \n
+
             cmd_args = parse_cmd_args(buf);
             paths_table = paths();            
             
-            while(paths_table[i]) {
-                // get path to executable by searching for cmd_args[0] in paths_table[i] and put it into path_to_exec
-                // check if cmd_args[0] exists using the function "file_exists" from "dir_stuff"
-                // if it does, make the string, path_to_exec = paths_table[i] + cmd_args[0]
+            //while(paths_table[i]) {
+                i = 1;
+                if ( file_exists(paths_table[i], cmd_args[0] ) == 0) {
+                    strcpy(path_to_exec,paths_table[i]);
+                    strcat(path_to_exec, cmd_args[0]);
+                }
 
-                    
-                        if (file_exists(paths_table[i], cmd_args[0])==0) {
-                            strcpy(path_to_exec,paths_table[i]);
-                            strcat(path_to_exec, cmd_args[0]);
-
-                            
-                        }
-                    
-                                    
                 ++i;
-            }
-            // fork and exec the path_to_exec with args from cmd_args (use cmd_args + 1 since cmd_args[0] is the command itself)
-            pid=fork();
-            if(pid<0) {
+            //}
+            
+            pid = fork();
+            if(pid < 0) {
                 perror("fork error");
             }
-            
-            else if(pid==0)
-            {   printf("test=%s\n",path_to_exec );
-                execv(path_to_exec,cmd_args+1);
-                free(path_to_exec);
-                free(cmd_args);
+            else if(pid == 0) {
+                error_log("CHILD path_to_exec = %s\n", path_to_exec);
+                int check_exec = execv(path_to_exec, cmd_args);
                 
-                exit(0);
+                error_log("CHILD Print post exec! THIS SHOULD NOT HAPPEN! errno = %d", errno);
+                if(check_exec < 0) {
+                    perror("CHILD EXECV failed!");
+                }
             }            
-            else{
-                //printf("test=%d\n",pid );
-                wait(&status);
-                
+            else {
+                wait4(pid, &status, 0, NULL);
+                error_log("Done waiting!");
+                fflush(stdout);
             }
-            //free(path_to_exec);
-            //free(cmd_args);
             
+            free(cmd_args);
+            strcpy(buf, "");
             //free(paths_table);    //commented since paths_table is constant for now!
+        }
         
     }while(check_input);
+
     free(buf);
+    printf("\n");
     return 0;
 }
 

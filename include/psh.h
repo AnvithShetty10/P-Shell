@@ -6,12 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 /* -------------------- System Libraries -------------------- */
 #include <unistd.h>
 #include <fcntl.h>
 #include<limits.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <errno.h>
+#include <pwd.h>
+#include <uuid/uuid.h>
+
 
 /* -------------------- Macros -------------------- */
 #define USERNAME_LIMIT 256          // Default username length limit 256 bytes

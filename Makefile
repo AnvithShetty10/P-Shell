@@ -2,7 +2,7 @@ includepath = ./include/
 srcpath = ./src/
 files = $(srcpath)psh.c $(srcpath)cmd_helper.c $(srcpath)cmd_processor.c $(srcpath)dir_stuff.c
 
-all: run
+all: drun
 
 run: compile
 	./psh
@@ -10,3 +10,8 @@ run: compile
 compile:
 	cc -I$(includepath) -Wall -o psh $(files)
 
+drun: dcompile
+	./psh
+
+dcompile:
+	cc -I$(includepath) -DDEBUG_MODE -Wall -o psh $(files)
