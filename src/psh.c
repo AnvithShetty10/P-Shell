@@ -1,5 +1,5 @@
 /*
-This filain function of `Pista` shell, along with other functions related to processing output strings like the welcome message and string promptp.
+This file contains the main function of `Pista` shell, along with other functions related to processing output strings like the welcome message and string prompt.
 */
 
 /* -------------------- Includes -------------------- */
@@ -40,13 +40,26 @@ int main(int argc, char **argv) {
     char *path_to_exec = (char *)malloc(sizeof(char) * PATH_MAX);
 
     do {
+    	char *gdir = NULL;
+		char *dir = NULL;
+		char *to = NULL;
         print_prompt();
+        strcpy(buf, "");
         check_input = fgets(buf, BUF_SIZE_LIMIT, stdin);    // returns NULL if EOF is found (CTRL-D)
         len = strlen(buf);
         
         //error_log("Input taken : %p %s %d", check_input, buf, len);
         if(check_input && len > 1) {
             buf[len-1] = 0;     // remove trailing \n
+            
+            
+            if(strcmp(buf,"chprompt")==0)
+            {
+            	_prompt_type=1;
+            
+            }
+            	
+       		else {
 
             cmd_args = parse_cmd_args(buf);
             paths_table = paths();            
@@ -60,7 +73,15 @@ int main(int argc, char **argv) {
 
                 ++i;
             //}
-            
+            if (!strcmp(cmd_args[0], "cd")){
+                    gdir=strdup(getcwd(gdir, 0));
+                    realloc(gdir,sizeof(char)*(strlen(gdir)+strlen(cmd_args[1])+2));
+                    dir = strcat(gdir, "/");
+                    to = strcat(dir, cmd_args[1]);
+                    chdir(to);
+                    continue;
+                }
+                
             pid = fork();
             if(pid < 0) {
                 perror("fork error");
@@ -81,7 +102,8 @@ int main(int argc, char **argv) {
             }
             
             free(cmd_args);
-            strcpy(buf, "");
+            
+           }
             //free(paths_table);    //commented since paths_table is constant for now!
         }
         
@@ -114,12 +136,14 @@ void print_welcome_message() {
 
 void print_prompt() {
     char *temp = NULL;
+    char *dirc =NULL, *dname =NULL;
     char *cwd = NULL;
     cwd = getcwd(cwd, 0);
+    temp = malloc(USERNAME_LIMIT + PATH_MAX);
 
     switch(_prompt_type) {
         case 0:
-            temp = malloc(USERNAME_LIMIT + PATH_MAX);
+            
             
             strcpy(temp, getlogin());
             strcat(temp, ":");
@@ -128,6 +152,17 @@ void print_prompt() {
 
             write(STDOUT_FILENO, temp, strlen(temp));
             break;
+            
+        case 1: 
+        	
+        	strcpy(temp, cwd);
+            strcat(temp, "-->> \0");
+            dirc=strdup(temp);
+            dname= basename(dirc);
+            
+		
+            write(STDOUT_FILENO, dname, strlen(dname));
+        	break;
     }
 
     free(temp);
