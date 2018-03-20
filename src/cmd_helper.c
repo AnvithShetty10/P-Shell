@@ -2,13 +2,26 @@
 This file has functions that assist command execution, such as dealing with environment variables.
 */
 
+/* -------------------- Includes -------------------- */
 #include "cmd_helper.h"
 
-char **paths() {
-    char **path_table = (char **)malloc(sizeof(char *) * 3);
-    path_table[0] = strdup("/usr/bin/");
-    path_table[1] = strdup("/bin/");
-    path_table[2] = NULL;
 
-    return path_table;
+/* -------------------- Statics and Globals -------------------- */
+
+/* Error logger function for THIS file ONLY. */
+static void error_log(char *fmt, ...) {
+#ifdef DEBUG_MODE
+    va_list args;
+    va_start(args, fmt);
+
+    printf("\n");
+    printf("CMD HELPER : ");
+    vprintf(fmt, args);
+    printf("\n");
+
+    va_end(args);
+#endif
 }
+
+
+/* -------------------- Function Definitions -------------------- */

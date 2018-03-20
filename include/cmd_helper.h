@@ -26,11 +26,6 @@
 
 /* -------------------- Function Prototypes -------------------- */
 
-/*
-Returns a 2D array of paths to search for executables; usually from environemnt variable.
-Last entry is always NULL.
-*/
-char **paths();
 
 
 #endif

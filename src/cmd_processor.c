@@ -37,7 +37,7 @@ char **parse_cmd_args(char *full_cmd) {
         if(check)
             ret = check;
         else {
-            error_log("FAILED TO REALLOC TABLE OF CMD AND ARGS");
+            perror("FAILED TO REALLOC TABLE OF CMD AND ARGS");
             return NULL;
         }
 
@@ -50,7 +50,7 @@ char **parse_cmd_args(char *full_cmd) {
     if(check)
         ret = check;
     else {
-        error_log("FAILED TO REALLOC TABLE OF CMD AND ARGS 2");
+        perror("FAILED TO REALLOC TABLE OF CMD AND ARGS 2");
         return NULL;
     }
 
@@ -66,5 +66,6 @@ char **parse_cmd_args(char *full_cmd) {
     }
     #endif
 
+    error_log("Done parsing command and args!");
     return ret;
 }

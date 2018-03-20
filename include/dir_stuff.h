@@ -25,11 +25,5 @@
 
 /* -------------------- Function Prototypes -------------------- */
 
-/*
-Searches for `file` in `path`; returns 1 if present, else 0.
-`path` must be the path to a directory!
-*/
-uint8_t file_exists(char *path, char *file);
-
 
 #endif
