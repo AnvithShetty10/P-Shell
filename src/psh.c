@@ -4,7 +4,6 @@ This file contains the main function of `Pista` shell, along with other function
 
 /* -------------------- Includes -------------------- */
 #include "psh.h"
-#include "cmd_helper.h"
 #include "cmd_processor.h"
 #include "dir_stuff.h"
 
@@ -84,6 +83,19 @@ int main(int argc, char **argv) {
                     free(gdir);
                     continue;
                 }
+                if (!strcmp(cmd_args[0], "export")) {
+                    error_log("EXPORT matched!");
+                    int index, temp = 0;
+                    for(index = 1 ; cmd_args[index] ; index++) {
+                        temp = putenv(strdup(cmd_args[index]));
+                        if(temp < 0) {
+                            error_log("Put %s", cmd_args[index]);
+                            perror("export error");
+                            error_log("errno = %d", errno);
+                        }
+                    }
+                    continue;
+                }
                     
                 pid = fork();
                 if(pid < 0) {
@@ -95,7 +107,10 @@ int main(int argc, char **argv) {
                     
                     error_log("CHILD Print post exec! THIS SHOULD NOT HAPPEN! errno = %d", errno);
                     if(check_exec < 0) {
-                        perror("CHILD EXECV failed!");
+                        #ifdef DEBUG_MODE 
+                        perror("CHILD EXECVP ERROR"); 
+                        #endif
+                        printf("%s : No such command or executable!\n", cmd_args[0]);
                     }
                     _exit(0);
                 }            
@@ -113,7 +128,7 @@ int main(int argc, char **argv) {
     }while(check_input);
 
     free(buf);
-    printf("\n");
+    printf("Pista says goodbye!\n");
     return 0;
 }
 

@@ -42,6 +42,25 @@ char **parse_cmd_args(char *full_cmd) {
         }
 
         ret[count++] = temp;
+        
+        // If string is given in quotes, remove the quotes
+        int index, len = strlen(ret[count-1]), jindex;
+        for(index = 0 ; index < len ; index++) {
+            if(ret[count-1][index] == '"')      // Check for quotes "
+            {
+                for(jindex = index; jindex < (len - 1) ; jindex++)
+                    ret[count-1][jindex] = ret[count-1][jindex + 1];      // move chars back, removing the quotes
+                len--;      // reduce length
+            }
+        }
+
+        ret[count-1][len] = 0;      // set new nul char to terminate string
+
+        // Process env variables
+        if(ret[count-1][0] == '$') {
+            ret[count-1] = getenv(ret[count-1] + 1);
+        }
+
         strsep(&temp, " ");
 
     }while(temp);
