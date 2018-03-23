@@ -1,6 +1,6 @@
 includepath = ./include/
 srcpath = ./src/
-files = $(srcpath)psh.c $(srcpath)cmd_processor.c $(srcpath)dir_stuff.c
+files = $(srcpath)psh.c $(srcpath)pista_main.c $(srcpath)cmd_processor.c $(srcpath)dir_stuff.c
 
 all: drun
 

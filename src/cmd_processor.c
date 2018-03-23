@@ -61,7 +61,7 @@ char **parse_cmd_args(char *full_cmd) {
             ret[count-1] = getenv(ret[count-1] + 1);
         }
 
-        strsep(&temp, " ");
+        strsep(&temp, " \t");
 
     }while(temp);
 
