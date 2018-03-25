@@ -34,8 +34,8 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
-#define READ_END 0
-#define WRITE_END 1
+#define READ_END 0      /* read end for unnamed pipes */
+#define WRITE_END 1     /* write end for unnamed pipes */
 
 
 /* -------------------- Globals -------------------- */

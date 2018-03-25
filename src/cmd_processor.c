@@ -9,19 +9,23 @@ This file handles everything related to command string processing, such as, extr
 /* -------------------- Statics and Globals -------------------- */
 
 /* Error logger function for THIS file ONLY. */
-static void error_log(char *fmt, ...) {
+#ifndef DEBUG_MODE
+#define error_log(fmt, ...) ;
+#endif
 #ifdef DEBUG_MODE
+static void error_log(char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    printf("\n");
-    printf("CMD PROCESSOR : ");
-    vprintf(fmt, args);
-    printf("\n");
+    dprintf(STDERR_FILENO, "\n");
+    dprintf(STDERR_FILENO, "CMD PROCESSOR : ");
+    vdprintf(STDERR_FILENO, fmt, args);
+    dprintf(STDERR_FILENO, "\n");
+    fflush(stderr);
 
     va_end(args);
-#endif
 }
+#endif
 
 
 /* -------------------- Function Definitions -------------------- */
@@ -43,7 +47,7 @@ char **parse_cmd_args(char *full_cmd) {
         if(check)
             ret = check;
         else {
-            perror("FAILED TO REALLOC TABLE OF CMD AND ARGS");
+            perror("FAILED TO REALLOC TABLE OF CMD AND ARGS"); 
             return NULL;
         }
 
@@ -79,16 +83,12 @@ char **parse_cmd_args(char *full_cmd) {
         return NULL;
     }
 
-    ret[count - 1] = NULL;
+    ret[count - 1] = NULL;  // add final NULL
+
 
     // Printing all arguments for debugging
     #ifdef DEBUG_MODE
-    int i = 0;
-    temp = *(ret + i);
-    while(temp) {
-        error_log("CMDARGS %s", temp);
-        temp = *(ret + ++i);
-    }
+    int i = 0; temp = *(ret + i); while(temp) { error_log("CMDARGS %s", temp); temp = *(ret + ++i); }
     #endif
 
     error_log("Done parsing command and args!");
@@ -115,8 +115,8 @@ char ***parse_commands(char *full_cmd) {
         error_log("Before strsep on pipe; temp = %s", temp);
         temp_cmd = strsep(&temp, "|");
         error_log("strsep on pipe: temp_cmd = %s; temp = %s", temp_cmd, temp);
-        ret[count++] = parse_cmd_args(temp_cmd);
 
+        ret[count++] = parse_cmd_args(temp_cmd);
     }while(temp);
 
     check = realloc(ret, sizeof(char **) * (count + 1));
@@ -128,15 +128,8 @@ char ***parse_commands(char *full_cmd) {
     }
     ret[count++] = NULL;
 
-    error_log("Printing all commands for debugging");
     #ifdef DEBUG_MODE
-    int i = 0;
-    char **temp_;
-    temp_ = *(ret + i);
-    while(temp_) {
-        error_log("CMD %s", temp_[0]);
-        temp_ = *(ret + ++i);
-    }
+    error_log("Printing all commands for debugging"); int i = 0; char **temp_; temp_ = *(ret + i); while(temp_) { error_log("CMD %s", temp_[0]); temp_ = *(ret + ++i); }
     #endif
 
     error_log("Done parsing command!");

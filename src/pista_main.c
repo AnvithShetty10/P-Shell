@@ -66,22 +66,24 @@ int pista_command(char **cmd_args) {
 
         if (cmd_args[1]) {
             gdir = getcwd(gdir, 0);
+            if(gdir == NULL) { perror("GETCWD FAIL"); error_log("GDIR = %s", gdir); }
+
             temp = realloc(gdir, sizeof(char) * (strlen(gdir) + strlen(cmd_args[1]) + 2));
             if (temp) {
-                error_log("Successful realloc of GDIR");
                 gdir = temp;
             }
             else {
                 perror("REALLOC FAIL");
-                error_log("FAILED TO REALLOC GDIR");
                 return 0;
             }
+
             dir = strcat(gdir, "/");
             to = strcat(dir, cmd_args[1]);
         }
         else {
             error_log("CD without args!");
             to = getenv("HOME");
+            if(to == NULL) perror("HOME enviornment variable not set!");
         }
 
         if(chdir(to) < 0) {
@@ -99,10 +101,7 @@ int pista_command(char **cmd_args) {
         int index, temp = 0;
         for(index = 1 ; cmd_args[index] ; index++) {
             temp = putenv(strdup(cmd_args[index]));
-            if(temp < 0) {
-                error_log("Put %s", cmd_args[index]);
-                perror("export error");
-            }
+            if(temp != 0) { error_log("Put %s", cmd_args[index]); perror("export error"); }
         }
         
         error_log("PISTA COMMAND 4!");
@@ -126,41 +125,32 @@ int pista_delegate(char ***commands) {
     
     // Save STDIN STDOUT
     int savedin = dup(STDIN_FILENO);
-    if(savedin < 0) {
-        perror("DUP savedin");
-        error_log("DUP INFILE errno = %d", errno);
-    }
+    if(savedin < 0) { perror("DUP savedin"); _exit(0); }
+
     int savedout = dup(STDOUT_FILENO);
-    if(savedout < 0) {
-        perror("DUP savedout");
-        error_log("DUP outfile errno = %d", errno);
-    }
+    if(savedout < 0) { perror("DUP savedout"); _exit(0); }
 
     char *infile = NULL, *outfile = NULL;    // Redirected IP or OP 
     int fdin, fdout;                        // child's stdin and stdout
     int instate = 0, outstate = 0;          // so child knows what to dup
 
-    error_log("while commands[%d]", i);
+    // Process all commands!
     while(commands[i] != NULL) {
         cmd_args = commands[i];
         //i++;  // moved to end of while loop to avoid confusion!
 
         check_reallocs = realloc(pipes, sizeof(char *) * i);    // allocate pointer to store pipe
-        if(check_reallocs)
-            pipes = check_reallocs;
-        else {
-            perror("PIPES REALLOC ERROR");
-            _exit(errno);
-        }
+        if(check_reallocs) pipes = check_reallocs;
+        else { perror("PIPES REALLOC ERROR"); _exit(errno); }
+
+
         pipes[i] = (int *)malloc(sizeof(int) * 2);      // allocate space for the actual pipe
 
+
         check_reallocs = realloc(children, sizeof(char *) * i);    // extend children pointer
-        if(check_reallocs)
-            children = check_reallocs;
-        else {
-            perror("PIPES REALLOC ERROR");
-            _exit(errno);
-        }
+        if(check_reallocs) children = check_reallocs;
+        else { perror("PIPES REALLOC ERROR"); _exit(errno); }
+
 
         if( !(temp = pista_command(cmd_args)) ) {
             if(i == 0) {    // if first command
@@ -203,15 +193,14 @@ int pista_delegate(char ***commands) {
                     outstate = 4;
                     fdout = dup(STDOUT_FILENO);
                 }
-                error_log("Last child %s FDIN = %d\tFDOUT = %d", cmd_args[0], fdin, fdout);
             }
             else {
                 error_log("not first or last command in sequence");
+
                 instate = 4;
                 outstate = 5;
                 pipe(pipes[i]);     // create our pipe
                 
-                // handle input
                 fdin = pipes[i-1][READ_END];
                 fdout = pipes[i][WRITE_END];
             }
@@ -225,7 +214,7 @@ int pista_delegate(char ***commands) {
             else if(pid == 0) {
                 dup2(fdin, STDIN_FILENO);
                 switch(instate) {
-                    case 1: case 2:
+                    case 1: case 2: 
                         break;
 
                     case 3: case 4:
@@ -239,7 +228,7 @@ int pista_delegate(char ***commands) {
                         close(pipes[i][READ_END]);
                         break;
 
-                    case 2: case 3: case 4:
+                    case 2: case 3: case 4: 
                         break;
                 }
 
@@ -250,9 +239,10 @@ int pista_delegate(char ***commands) {
                     #ifdef DEBUG_MODE 
                     perror("CHILD EXECVP ERROR");
                     #endif
-                    printf(RED "%s : No such command or executable!\n" RESET, cmd_args[0]);
+                    printf(RED "%s : No such command or executable in $PATH!\n" RESET, cmd_args[0]);
                 }
-                _exit(0);
+                
+                exit(0);
             }
             else {
                 error_log("pid = %d", pid);
@@ -267,26 +257,26 @@ int pista_delegate(char ***commands) {
 
     
     error_log("Pista going to wait for children");
-    // Wait for all children to finish
     int flag = 0;
     for(j = 0 ; j < i ; j++) {
         flag = 0;
-        while( (chpid = waitpid(-1, &status, WUNTRACED | WNOHANG)) < 0) error_log("wait=%d", chpid);
-        fflush(stdout);
-        fflush(stderr);
+        while( (chpid = waitpid(-1, &status, WUNTRACED | WNOHANG)) < 0) ;
+        fflush(stdout); fflush(stderr);
+
         if(WIFEXITED(status))
             error_log("%d exited with %d", chpid, WEXITSTATUS(status));
+
         for(k = 0 ; k < i ; k++) {
             if(children[k] == chpid) {
                 flag = !flag;
-                error_log("k = %d", k);
+                error_log("child k = %d", k);
                 close(pipes[k][WRITE_END]);
                 break;
             }
         }
-        if(!flag) {
+
+        if(!flag)   // if non-forked child pid found, ignore it!
             j--;
-        }
     }
     
     error_log("Done waiting!");
