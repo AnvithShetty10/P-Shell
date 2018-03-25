@@ -12,9 +12,15 @@ This file delegates work to other functions from other files.
 /* -------------------- Macros -------------------- */
 #define getlogin() getpwuid(getuid())->pw_name
 
+#ifndef DEBUG_MODE                  // if not in DEBUG MODE, replace all calls to error_log with empty statements! Efficiency MAX!
+#define error_log(fmt, ...) ;
+#endif
+
 
 /* -------------------- Function Prototypes -------------------- */
+#ifdef DEBUG_MODE
 static void error_log(char *fmt, ...);
+#endif
 void print_welcome_message();
 void print_prompt();
 
@@ -50,6 +56,9 @@ int main(int argc, char **argv) {
                 case 2:
                     check_input = NULL;
                     break;
+                
+                default:
+                    strcpy(buf, "");
             }
 
             free(commands);    
@@ -66,9 +75,6 @@ int main(int argc, char **argv) {
 /* -------------------- Function Definitions -------------------- */
 
 /* Error logger function for THIS file ONLY. */
-#ifndef DEBUG_MODE                  // if not in DEBUG MODE, replace all calls to error_log with empty statements! Efficiency MAX!
-#define error_log(fmt, ...) ;
-#endif
 #ifdef DEBUG_MODE
 static void error_log(char *fmt, ...) {
     va_list args;

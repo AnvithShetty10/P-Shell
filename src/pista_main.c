@@ -43,16 +43,18 @@ int pista_command(char **cmd_args) {
 
         printf(BOLDRED "Are you sure (Y/N) ?  " RESET);
         fflush(stdout);
-        switch(getchar()) {
+        char opt[100];
+        fgets(opt, 99, stdin);
+        switch(opt[0]) {
             case 'Y': case 'y':
                 break;
             
             case 'N': case 'n':
-                return 0;
+                return -1;
 
             default:
-                printf(RED "Invalid choice!" RESET);
-                return 0;
+                printf(RED "Invalid choice!\n" RESET);
+                return -1;
         }
         
         error_log("PISTA COMMAND 2!");
@@ -120,7 +122,7 @@ int pista_delegate(char ***commands) {
     pid_t pid, chpid;
     int status = 0, i = 0, j, k, temp;
     int **pipes = NULL, *children = NULL;
-    char **cmd_args;
+    char **cmd_args, **redirs = NULL;
     void *check_reallocs = NULL;
     
     // Save STDIN STDOUT
@@ -138,6 +140,15 @@ int pista_delegate(char ***commands) {
     while(commands[i] != NULL) {
         cmd_args = commands[i];
         //i++;  // moved to end of while loop to avoid confusion!
+
+        redirs = handle_redirections(cmd_args);
+        if(!redirs) {
+            return 0;
+        }
+        else {
+            infile = redirs[0];
+            outfile = redirs[1];
+        }
 
         check_reallocs = realloc(pipes, sizeof(char *) * i);    // allocate pointer to store pipe
         if(check_reallocs) pipes = check_reallocs;
@@ -159,7 +170,7 @@ int pista_delegate(char ***commands) {
                 // handle input
                 if(infile) {
                     instate = 1;
-                    ;   // open input file! Check for input redirection here!
+                    fdin = open(infile, O_RDONLY);   // open input file! Check for input redirection here!
                 }
                 else {
                     instate = 2;
@@ -187,7 +198,7 @@ int pista_delegate(char ***commands) {
                 // handle output
                 if(outfile) {
                     outstate = 3;
-                    ;   // open output file! OUTPUT redirection done here!
+                    fdout = open(outfile, O_RDONLY);   // open output file! OUTPUT redirection done here!
                 }
                 else {
                     outstate = 4;
@@ -291,4 +302,65 @@ int pista_delegate(char ***commands) {
     free(children);
 
     return status;
+}
+
+
+char **handle_redirections(char **cmd_args) {
+    char **ret = (char **)malloc(sizeof(char *) * 2);   // input file and output file names
+    ret[0] = ret[1] = NULL;
+    
+    int i = 0;
+    while(cmd_args[i]) {
+        if(cmd_args[i][0] == '<') {
+            if(cmd_args[i+1]) {
+                int temp = open(cmd_args[i+1], O_RDONLY);
+                if(temp < 0) {
+                    perror(RED "Input file error");
+                    fprintf(stderr, RESET);
+                    return NULL;
+                }
+
+                int len = strlen(cmd_args[i+1]);
+                ret[0] = (char *)malloc(sizeof(char) * (len + 1));
+                strcpy(ret[0], cmd_args[i+1]);
+                
+                int j;      // remove `< file` from cmd_args
+                for(j = i ; cmd_args[j+1] != NULL ; j++)
+                    cmd_args[j] = cmd_args[j+2];
+            }
+            else {
+                fprintf(stderr, "Please specify input file!");
+                return NULL;
+            }
+        }
+        else if(cmd_args[i][0] == '>') {
+            if(cmd_args[i+1]) {
+                int temp = open(cmd_args[i+1], O_RDONLY);
+                if(temp < 0) {
+                    perror(RED "Output file error");
+                    fprintf(stderr, RESET);
+                    return NULL;
+                }
+
+                int len = strlen(cmd_args[i+1]);
+                ret[1] = (char *)malloc(sizeof(char) * (len + 1));
+                strcpy(ret[1], cmd_args[i+1]);
+                
+                
+                int j;      // remove `< file` from cmd_args
+                for(j = i ; cmd_args[j+1] != NULL ; j++)
+                    cmd_args[j] = cmd_args[j+2];
+            }
+            else {
+                fprintf(stderr, "Please specify output file!");
+                return NULL;
+            }
+        }
+
+        i++;
+        if(ret[0] && ret[1])
+            break;
+    }
+
+    return ret;
 }

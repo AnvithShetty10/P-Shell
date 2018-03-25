@@ -63,5 +63,7 @@ value   |                       |
 */
 int pista_delegate(char ***commands);
 
+char **handle_redirections(char **cmd_args);
+
 
 #endif
