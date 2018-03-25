@@ -23,10 +23,10 @@ void print_prompt();
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
     print_welcome_message();
-
+    
     char *check_input = NULL;
     
-    char **cmd_args = NULL;
+    char ***commands = NULL;
     int len;
 
     char *buf = (char *)malloc(sizeof(char) * BUF_SIZE_LIMIT);
@@ -41,14 +41,9 @@ int main(int argc, char **argv) {
         if(check_input && len > 1) {
             error_log("Processing the command...");
             buf[len-1] = 0;     // remove trailing \n
-            
-            cmd_args = parse_cmd_args(buf);
-            
-            switch(pista_command(cmd_args)) {
-                case 0:
-                    pista_delegate(cmd_args);
-                    break;
 
+            commands = parse_commands(buf);
+            switch(pista_delegate(commands)) {
                 case 1:
                     _prompt_type = !_prompt_type;
                     break;
@@ -58,7 +53,7 @@ int main(int argc, char **argv) {
                     break;
             }
 
-            free(cmd_args);    
+            free(commands);    
         }
         
     }while(check_input);
@@ -103,7 +98,9 @@ void print_welcome_message() {
     return;
 }
 
+
 void print_prompt() {
+    fflush(stdout);
     char *temp = NULL;
     char *dirc =NULL, *dname =NULL;
     char *cwd = NULL;
@@ -112,8 +109,7 @@ void print_prompt() {
 
     switch(_prompt_type) {
         case 0:
-            
-            
+
             strcpy(temp, getlogin());
             strcat(temp, ":");
             strcat(temp, cwd);
@@ -134,6 +130,7 @@ void print_prompt() {
         	break;
     }
 
+    fflush(stdout);
     free(temp);
     free(cwd);
 }

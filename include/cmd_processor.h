@@ -15,10 +15,15 @@
 /* -------------------- Function Prototypes -------------------- */
 
 /*
-Parses a null-terminated string and splits it at every space. 
+Parses a null-terminated string and splits it at every space or tab. 
 The last entry in the 2D array that is returned is NULL; makes it easy to use with execvp syscall.
 */
 char **parse_cmd_args(char *full_cmd);
 
+/*
+Parses a null-terminated string and splits it at every pipe. Then calls parse_cmd_args and gets 2D arrays of command and args.
+The last entry in the 3D array that is returned is NULL; makes it easy to use.
+*/
+char ***parse_commands(char *full_cmd);
 
 #endif

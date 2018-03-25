@@ -29,8 +29,14 @@ static void error_log(char *fmt, ...) {
 char **parse_cmd_args(char *full_cmd) {
     char **ret = NULL;
 
-    int count = 0;
+    int count = 0, len = strlen(full_cmd) - 1;
     char *temp = full_cmd;
+    error_log("len = %d; temp[len] = %c; *temp = %c", len, temp[len], *temp);
+    while(temp[len] == ' ')
+        temp[len--] = 0;
+    while(*temp == ' ')             // strip spaces
+        temp++;
+
     void *check = NULL;
     do {
         check = realloc(ret, sizeof(char *) * (count + 1));
@@ -80,11 +86,59 @@ char **parse_cmd_args(char *full_cmd) {
     int i = 0;
     temp = *(ret + i);
     while(temp) {
-        error_log("%s", temp);
+        error_log("CMDARGS %s", temp);
         temp = *(ret + ++i);
     }
     #endif
 
     error_log("Done parsing command and args!");
+    return ret;
+}
+
+
+char ***parse_commands(char *full_cmd) {
+    error_log("Entered parse_commands");
+    char ***ret = NULL;
+
+    int count = 0;
+    char *temp = full_cmd, *temp_cmd = NULL;
+    void *check = NULL;
+    do {
+        check = realloc(ret, sizeof(char **) * (count + 1));
+        if(check)
+            ret = check;
+        else {
+            perror("FAILED TO REALLOC TABLE OF COMMANDS");
+            return NULL;
+        }
+
+        error_log("Before strsep on pipe; temp = %s", temp);
+        temp_cmd = strsep(&temp, "|");
+        error_log("strsep on pipe: temp_cmd = %s; temp = %s", temp_cmd, temp);
+        ret[count++] = parse_cmd_args(temp_cmd);
+
+    }while(temp);
+
+    check = realloc(ret, sizeof(char **) * (count + 1));
+    if(check)
+        ret = check;
+    else {
+        perror("FAILED TO REALLOC TABLE OF COMMANDS");
+        return NULL;
+    }
+    ret[count++] = NULL;
+
+    error_log("Printing all commands for debugging");
+    #ifdef DEBUG_MODE
+    int i = 0;
+    char **temp_;
+    temp_ = *(ret + i);
+    while(temp_) {
+        error_log("CMD %s", temp_[0]);
+        temp_ = *(ret + ++i);
+    }
+    #endif
+
+    error_log("Done parsing command!");
     return ret;
 }

@@ -4,3 +4,6 @@ psh
 .DS_Store
 tests/
 .vscode.
+pista_logs.txt
+test.c
+psh.dSYM/

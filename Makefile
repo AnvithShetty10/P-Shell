@@ -14,4 +14,4 @@ drun: dcompile
 	./psh
 
 dcompile:
-	cc -I$(includepath) -DDEBUG_MODE -Wall -o psh $(files)
+	cc -I$(includepath) -DDEBUG_MODE -g -Wall -o psh $(files)

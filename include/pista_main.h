@@ -4,12 +4,16 @@
 /* -------------------- Standard Libraries -------------------- */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <pthread.h>
 
 
 /* -------------------- System Libraries -------------------- */
 #include <unistd.h>
 #include <errno.h>
-
+#include <fcntl.h>
+#include <sys/wait.h>
 
 /* -------------------- Macros -------------------- */
 #define RESET   "\033[0m"
@@ -30,13 +34,34 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
+#define READ_END 0
+#define WRITE_END 1
+
 
 /* -------------------- Globals -------------------- */
 
 
 /* -------------------- Function Prototypes -------------------- */
+
+/*
+Process pista's command's!
+*/
 int pista_command(char **cmd_args);
-int pista_delegate(char **cmd_args);
+
+/*
+Process all commands, delegate pista's in-built commands to pista_command, fork and exec the rest. Handles pipes, redirections, and child processes.
+--------------------------------|
+Return  | Command               |
+value   |                       |
+--------------------------------|
+0       | not pista command!    |
+1       | chprompt              |
+2       | exit                  |
+3       | cd                    |
+4       | export                |
+--------------------------------|
+*/
+int pista_delegate(char ***commands);
 
 
 #endif
