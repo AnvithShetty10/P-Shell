@@ -65,5 +65,10 @@ int pista_delegate(char ***commands);
 
 char **handle_redirections(char **cmd_args);
 
+/*
+Spawns child process to execute command. Also set's up it's STDIN and STDOUT using dups.
+*/
+void spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr);
+
 
 #endif

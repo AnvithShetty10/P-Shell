@@ -119,7 +119,7 @@ int pista_command(char **cmd_args) {
 int pista_delegate(char ***commands) {
     error_log("Entered pista delegate");
 
-    pid_t pid, chpid;
+    pid_t chpid;
     int status = 0, i = 0, j, k, temp;
     int **pipes = NULL, *children = NULL;
     char **cmd_args, **redirs = NULL;
@@ -143,11 +143,13 @@ int pista_delegate(char ***commands) {
 
         redirs = handle_redirections(cmd_args);
         if(!redirs) {
+            error_log("Handle redirections error!");
             return 0;
         }
         else {
             infile = redirs[0];
             outfile = redirs[1];
+            error_log("infile = %s\noutfile=%s", infile, outfile);
         }
 
         check_reallocs = realloc(pipes, sizeof(char *) * i);    // allocate pointer to store pipe
@@ -164,7 +166,30 @@ int pista_delegate(char ***commands) {
 
 
         if( !(temp = pista_command(cmd_args)) ) {
-            if(i == 0) {    // if first command
+            if(i == 0 && commands[i+1] == NULL) { // first and last
+                error_log("first and last command");
+                // handle input
+                if(infile) {
+                    instate = 1;
+                    fdin = open(infile, O_RDONLY);   // open input file! Check for input redirection here!
+                }
+                else {
+                    instate = 2;
+                    fdin = dup(STDIN_FILENO);
+                }
+
+                // handle output
+                if(outfile) {
+                    outstate = 3;
+                    fdout = open(outfile, O_CREAT | O_TRUNC | O_WRONLY, 0664);   // open output file! OUTPUT redirection done here!
+                    if(fdout < 0) perror("OP open error");
+                }
+                else {
+                    outstate = 4;
+                    fdout = dup(STDOUT_FILENO);
+                }
+            }
+            else if(i == 0) {    // if first command
                 error_log("First child!");
                 
                 // handle input
@@ -198,7 +223,7 @@ int pista_delegate(char ***commands) {
                 // handle output
                 if(outfile) {
                     outstate = 3;
-                    fdout = open(outfile, O_RDONLY);   // open output file! OUTPUT redirection done here!
+                    fdout = open(outfile, O_CREAT | O_TRUNC | O_WRONLY, 0664);   // open output file! OUTPUT redirection done here!
                 }
                 else {
                     outstate = 4;
@@ -218,47 +243,7 @@ int pista_delegate(char ***commands) {
 
             error_log("FORKING instate = %d\toutstate = %d", instate, outstate);
 
-            pid = fork();
-            if(pid < 0) {
-                perror("fork error");
-            }
-            else if(pid == 0) {
-                dup2(fdin, STDIN_FILENO);
-                switch(instate) {
-                    case 1: case 2: 
-                        break;
-
-                    case 3: case 4:
-                        close(pipes[i-1][WRITE_END]);
-                        break;
-                }
-
-                dup2(fdout, STDOUT_FILENO);
-                switch(outstate) {
-                    case 1: case 5:
-                        close(pipes[i][READ_END]);
-                        break;
-
-                    case 2: case 3: case 4: 
-                        break;
-                }
-
-                int check_exec = execvp(cmd_args[0], cmd_args);
-
-                error_log("CHILD Print post exec! THIS SHOULD NOT HAPPEN! errno = %d", errno);
-                if(check_exec < 0) {
-                    #ifdef DEBUG_MODE 
-                    perror("CHILD EXECVP ERROR");
-                    #endif
-                    printf(RED "%s : No such command or executable in $PATH!\n" RESET, cmd_args[0]);
-                }
-                
-                exit(0);
-            }
-            else {
-                error_log("pid = %d", pid);
-                children[i] = pid;
-            }
+            spawn_child_cmd(cmd_args, instate, fdin, outstate, fdout, pipes, children, i);
         }
         else 
             return temp;
@@ -274,9 +259,6 @@ int pista_delegate(char ***commands) {
         while( (chpid = waitpid(-1, &status, WUNTRACED | WNOHANG)) < 0) ;
         fflush(stdout); fflush(stderr);
 
-        if(WIFEXITED(status))
-            error_log("%d exited with %d", chpid, WEXITSTATUS(status));
-
         for(k = 0 ; k < i ; k++) {
             if(children[k] == chpid) {
                 flag = !flag;
@@ -288,6 +270,10 @@ int pista_delegate(char ***commands) {
 
         if(!flag)   // if non-forked child pid found, ignore it!
             j--;
+        else {
+            if(WIFEXITED(status))
+                error_log("%d exited with %d", chpid, WEXITSTATUS(status));
+        }
     }
     
     error_log("Done waiting!");
@@ -305,6 +291,56 @@ int pista_delegate(char ***commands) {
 }
 
 
+void spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr) {
+    pid_t pid;
+
+    pid = fork();
+    if (pid < 0) {
+        perror("fork error");
+    }
+    else if (pid == 0) {
+        if(dup2(fdin, STDIN_FILENO) < 0) perror("dup2 of input failed");
+        close(fdin);
+        switch (instate) {
+        case 1: case 2:
+            break;
+
+        case 3: case 4:
+            close(pipes[curr - 1][WRITE_END]);
+            break;
+        }
+
+        if(dup2(fdout, STDOUT_FILENO) < 0) perror("dup2 of output failed");
+        close(fdout);
+        switch (outstate) {
+        case 1: case 5:
+            close(pipes[curr][READ_END]);
+            break;
+
+        case 2: case 3: case 4:
+            break;
+        }
+
+        int check_exec = execvp(cmd_args[0], cmd_args);
+
+        error_log("CHILD Print post exec! THIS SHOULD NOT HAPPEN! errno = %d", errno);
+        if (check_exec < 0)
+        {
+            #ifdef DEBUG_MODE
+            perror("CHILD EXECVP ERROR");
+            #endif
+            printf(RED "%s : No such command or executable in $PATH!\n" RESET, cmd_args[0]);
+        }
+
+        exit(0);
+    }
+    else {
+        error_log("pid = %d", pid);
+        children[curr] = pid;
+    }
+}
+
+
 char **handle_redirections(char **cmd_args) {
     char **ret = (char **)malloc(sizeof(char *) * 2);   // input file and output file names
     ret[0] = ret[1] = NULL;
@@ -319,10 +355,12 @@ char **handle_redirections(char **cmd_args) {
                     fprintf(stderr, RESET);
                     return NULL;
                 }
+                close(temp);
 
                 int len = strlen(cmd_args[i+1]);
-                ret[0] = (char *)malloc(sizeof(char) * (len + 1));
-                strcpy(ret[0], cmd_args[i+1]);
+                ret[0] = (char *)malloc(sizeof(char) * (len + 1 + 2));
+                strcpy(ret[0], "./");
+                strcat(ret[0], cmd_args[i+1]);
                 
                 int j;      // remove `< file` from cmd_args
                 for(j = i ; cmd_args[j+1] != NULL ; j++)
@@ -341,10 +379,12 @@ char **handle_redirections(char **cmd_args) {
                     fprintf(stderr, RESET);
                     return NULL;
                 }
+                close(temp);
 
                 int len = strlen(cmd_args[i+1]);
-                ret[1] = (char *)malloc(sizeof(char) * (len + 1));
-                strcpy(ret[1], cmd_args[i+1]);
+                ret[1] = (char *)malloc(sizeof(char) * (len + 1 + 2));
+                strcpy(ret[1], "./");
+                strcat(ret[1], cmd_args[i+1]);
                 
                 
                 int j;      // remove `< file` from cmd_args
