@@ -26,31 +26,57 @@ static void error_log(char *fmt, ...) {
     va_end(args);
 }
 #endif
-char command[25][20],info[25][50];
+
+char *itoa(int i) {
+    error_log("Entered ITOA with %d", i);
+
+    char *ret = (char *)malloc(sizeof(char));
+    int curr = 0;
+    while(i) {
+        ret = (char *)realloc(ret, (curr + 2) * sizeof(char));
+        ret[curr++] = digit_to_char(i % 10);
+        i /= 10;
+    }
+    ret[curr] = 0;
+
+    error_log("Reversing %d; %d; %s", curr, curr/2, ret);
+    // reverse
+    int j; 
+    char temp;
+    for(i = 0, j = curr-1 ; i < (curr / 2) ; i++, j--) {
+        temp = ret[i];
+        ret[i] = ret[j];
+        ret[j] = temp;
+    }
+    
+    error_log("Returning ITOA : %s", ret);
+    return ret;
+}
+
+char command[25][50],info[25][50];
 int write_history(char *buf,int current,pid_t pid){
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
-    int i=current,j=0;
-    //char pid_str[4];
-    //itoa(pid,pid_str,10);
+    int j=0;
+    char* pid_str=NULL;
+    pid_str=itoa(pid);
     for(j=0;j<25;j++)
         strcpy(command[j],"");
         strcpy(info[j],"");
     int fd=open("history.txt",O_RDWR|O_APPEND|O_CREAT,0666);
-    //
     if(strlen(buf)>0)
-        {strcpy(info[current],asctime(tm));        
+        {
+         strcpy(info[current],pid_str);   
+         strcat(info[current],"  ");    
+         strcat(info[current],asctime(tm));        
+         strcpy(command[current],"  ");
+         strcat(command[current],buf);
+         if (info[current][strlen(info[current])-1]=='\n') info[current][strlen(info[current])-1]='\0';     
+         strcat(info[current],command[current]);
         } 
-    do{    
-    strcpy(command[current],buf);
-    //strcpy(info[current],pid_str);
-    //strcat(command[current]," ");
-    strcat(command[current],info[current]);
     if(fd){
-            write(fd,command[i],strlen(command[i])+1);
+            write(fd,info[current],strlen(info[current])+1);
         }
-        i = (i+1) % 25;
-    }while(i!=current);    
     close(fd);    
     return 0;
 }

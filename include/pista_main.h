@@ -37,7 +37,7 @@
 #define READ_END 0      /* read end for unnamed pipes */
 #define WRITE_END 1     /* write end for unnamed pipes */
 
-
+#define digit_to_char(d) (48+d)	/*convert digits to char for itoa*/
 /* -------------------- Globals -------------------- */
 struct alias
 {
