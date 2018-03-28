@@ -59,7 +59,9 @@ value   |                       |
 2       | exit                  |
 3       | cd                    |
 4       | export                |
---------------------------------|
+5		| help                  |
+6		| history				|
+--------------------------------
 */
 int pista_delegate(char ***commands);
 
@@ -70,5 +72,5 @@ Spawns child process to execute command. Also set's up it's STDIN and STDOUT usi
 */
 void spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr);
 
-
+int write_history(char *,int, pid_t);
 #endif

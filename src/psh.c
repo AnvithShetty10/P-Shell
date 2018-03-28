@@ -24,7 +24,7 @@ static void error_log(char *fmt, ...);
 void print_welcome_message();
 void print_prompt();
 
-
+int current=0;
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
     print_welcome_message();
@@ -33,20 +33,21 @@ int main(int argc, char **argv) {
     
     char ***commands = NULL;
     int len;
-
+    
     char *buf = (char *)malloc(sizeof(char) * BUF_SIZE_LIMIT);
-
     do {
         print_prompt();
         strcpy(buf, "");
         check_input = fgets(buf, BUF_SIZE_LIMIT, stdin);    // returns NULL if EOF is found (CTRL-D)
         len = strlen(buf);
+        current = (current + 1) % HISTORY_COUNT;
+        
+        write_history(buf,current,getpid());        
         
         error_log("Input taken : %p %s %d %d %d", check_input, buf, len, len > 1, check_input && len > 1);
         if(check_input && len > 1) {
             error_log("Processing the command...");
             buf[len-1] = 0;     // remove trailing \n
-
             commands = parse_commands(buf);
             switch(pista_delegate(commands)) {
                 case 1:

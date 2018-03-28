@@ -43,7 +43,7 @@
 #define USERNAME_LIMIT 256          // Default username length limit 256 bytes
 #define BUF_SIZE_LIMIT 256000       // Default buffer size limit 256 KB
 
-
+#define HISTORY_COUNT 25
 /* -------------------- Globals -------------------- */
 int _prompt_type = 0;
 

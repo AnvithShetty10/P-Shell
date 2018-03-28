@@ -26,7 +26,24 @@ static void error_log(char *fmt, ...) {
     va_end(args);
 }
 #endif
-
+char command[25][20],info[25][50];
+int write_history(char *buf,int current,pid_t pid){
+    
+    int i=current,j=0;
+    for(j=0;j<25;j++)
+        strcpy(command[j], "");
+    int fd=open("history.txt",O_RDWR|O_APPEND|O_CREAT,0666);
+            
+    do{
+    strcpy(command[current],buf);
+    if(fd){
+            write(fd,command[i],strlen(command[i])+1);
+        }
+        i = (i+1) % 25;
+    }while(i!=current);    
+    close(fd);    
+    return 0;
+}
 
 int pista_command(char **cmd_args) {
     char *temp = NULL;
@@ -108,6 +125,37 @@ int pista_command(char **cmd_args) {
         
         error_log("PISTA COMMAND 4!");
         return 4;
+
+
+    }
+
+    // HELP IS 5
+    else if (!strcmp(cmd_args[0], "help")) {
+        error_log("HELP matched!");
+        char str;
+        int fd=open("help.txt",O_RDWR,0666);
+        if(fd){
+            while(read(fd,&str,sizeof(str)))
+                printf("%c",str);
+            }
+        close(fd);    
+        
+        error_log("PISTA COMMAND 5!");
+        return 5;
+    }    
+
+    // HISTORY IS 6
+    else if (!strcmp(cmd_args[0], "history")) {
+        error_log("HISTORY matched!");
+        char str;
+        int fd=open("history.txt",O_RDWR,0666);
+        if(fd){
+            while(read(fd,&str,sizeof(str)))
+                printf("%c",str);
+            }
+        close(fd);    
+        error_log("PISTA COMMAND 6!");
+        return 6;
     }
 
     // NO PISTA COMMAND!
