@@ -39,7 +39,11 @@
 
 
 /* -------------------- Globals -------------------- */
-
+struct alias
+{
+	char keys[2];
+	char values[20];
+}al[100];
 
 /* -------------------- Function Prototypes -------------------- */
 

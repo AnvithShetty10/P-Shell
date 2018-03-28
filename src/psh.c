@@ -25,6 +25,7 @@ void print_welcome_message();
 void print_prompt();
 
 int current=0;
+
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
     print_welcome_message();

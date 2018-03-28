@@ -28,14 +28,24 @@ static void error_log(char *fmt, ...) {
 #endif
 char command[25][20],info[25][50];
 int write_history(char *buf,int current,pid_t pid){
-    
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
     int i=current,j=0;
+    //char pid_str[4];
+    //itoa(pid,pid_str,10);
     for(j=0;j<25;j++)
-        strcpy(command[j], "");
+        strcpy(command[j],"");
+        strcpy(info[j],"");
     int fd=open("history.txt",O_RDWR|O_APPEND|O_CREAT,0666);
-            
-    do{
+    //
+    if(strlen(buf)>0)
+        {strcpy(info[current],asctime(tm));        
+        } 
+    do{    
     strcpy(command[current],buf);
+    //strcpy(info[current],pid_str);
+    //strcat(command[current]," ");
+    strcat(command[current],info[current]);
     if(fd){
             write(fd,command[i],strlen(command[i])+1);
         }
@@ -45,8 +55,11 @@ int write_history(char *buf,int current,pid_t pid){
     return 0;
 }
 
+int a=0;
 int pista_command(char **cmd_args) {
     char *temp = NULL;
+    char *temp_al_val=cmd_args[1];
+    char *temp_al_key=NULL;
 
     // CHPROMPT IS 1
     if (strcmp(cmd_args[0], "chprompt") == 0) {
@@ -156,6 +169,24 @@ int pista_command(char **cmd_args) {
         close(fd);    
         error_log("PISTA COMMAND 6!");
         return 6;
+    }
+
+    // ALIAS IS 7
+    
+    else if (!strcmp(cmd_args[0], "alias")) {
+        error_log("ALIAS matched!");
+         temp_al_key=strsep(&temp_al_val, "=");
+         strcpy(al[a].keys, temp_al_key);
+         strcpy(al[a].values, temp_al_val);
+         int k=0;
+         for(k=0;k<5;k++){
+         printf("keys=%s\n",al[k].keys );
+         printf("val=%s\n",al[k].values );
+        }
+         a++;
+         
+        error_log("PISTA COMMAND 7!");
+        return 7;
     }
 
     // NO PISTA COMMAND!

@@ -52,4 +52,6 @@ int _prompt_type = 0;
 void print_welcome_message();
 void print_prompt();
 
+
 #endif
+
