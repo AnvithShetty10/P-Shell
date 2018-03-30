@@ -10,7 +10,6 @@ This file delegates work to other functions from other files.
 
 
 /* -------------------- Macros -------------------- */
-#define getlogin() getpwuid(getuid())->pw_name
 
 #ifndef DEBUG_MODE                  // if not in DEBUG MODE, replace all calls to error_log with empty statements! Efficiency MAX!
 #define error_log(fmt, ...) ;
@@ -94,6 +93,10 @@ static void error_log(char *fmt, ...) {
 
 
 void print_welcome_message() {
+    strcpy(histPath, getenv("HOME"));
+    strcat(histPath, "/");
+    strcat(histPath, HISTORY_FILE);
+
     printf("%s", "Welcome ");
     printf(BOLDCYAN "%s" RESET, getlogin());
     printf(", to \n");

@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <limits.h>
 
 /* -------------------- Macros -------------------- */
 #define RESET   "\033[0m"
@@ -38,6 +39,7 @@
 #define WRITE_END 1     /* write end for unnamed pipes */
 
 #define digit_to_char(d) (48+d)	/*convert digits to char for itoa*/
+
 /* -------------------- Globals -------------------- */
 struct alias
 {
@@ -45,12 +47,19 @@ struct alias
 	char values[20];
 }al[100];
 
+char histPath[PATH_MAX];
+
 /* -------------------- Function Prototypes -------------------- */
 
 /*
 Process pista's command's!
 */
 int pista_command(char **cmd_args);
+
+/*
+Returns the index of the key in the alias table. If not found, returns -1
+*/
+int is_alias(char *key);
 
 /*
 Process all commands, delegate pista's in-built commands to pista_command, fork and exec the rest. Handles pipes, redirections, and child processes.
@@ -65,6 +74,7 @@ value   |                       |
 4       | export                |
 5		| help                  |
 6		| history				|
+7		| alias 				|
 --------------------------------
 */
 int pista_delegate(char ***commands);

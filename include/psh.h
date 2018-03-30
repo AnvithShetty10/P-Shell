@@ -44,6 +44,11 @@
 #define BUF_SIZE_LIMIT 256000       // Default buffer size limit 256 KB
 
 #define HISTORY_COUNT 25
+#define HISTORY_FILE "history.txt"
+
+#define getlogin() getpwuid(getuid())->pw_name
+
+
 /* -------------------- Globals -------------------- */
 int _prompt_type = 0;
 

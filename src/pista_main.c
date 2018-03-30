@@ -53,6 +53,7 @@ char *itoa(int i) {
     return ret;
 }
 
+
 char command[25][50],info[25][50];
 int write_history(char *buf,int current,pid_t pid){
     time_t t = time(NULL);
@@ -63,7 +64,7 @@ int write_history(char *buf,int current,pid_t pid){
     for(j=0;j<25;j++)
         strcpy(command[j],"");
         strcpy(info[j],"");
-    int fd=open("history.txt",O_RDWR|O_APPEND|O_CREAT,0666);
+    int fd=open(histPath,O_RDWR|O_APPEND|O_CREAT,0666);
     if(strlen(buf)>0)
         {
          strcpy(info[current],pid_str);   
@@ -80,6 +81,7 @@ int write_history(char *buf,int current,pid_t pid){
     close(fd);    
     return 0;
 }
+
 
 int a=0;
 int pista_command(char **cmd_args) {
@@ -201,13 +203,17 @@ int pista_command(char **cmd_args) {
     
     else if (!strcmp(cmd_args[0], "alias")) {
         error_log("ALIAS matched!");
-         temp_al_key=strsep(&temp_al_val, "=");
-         strcpy(al[a].keys, temp_al_key);
-         strcpy(al[a].values, temp_al_val);
-         int k=0;
-         for(k=0;k<5;k++){
-         printf("keys=%s\n",al[k].keys );
-         printf("val=%s\n",al[k].values );
+        if(cmd_args[1]) {
+            temp_al_key=strsep(&temp_al_val, "=");
+            strcpy(al[a].keys, temp_al_key);
+            strcpy(al[a].values, temp_al_val);
+        }
+        else {
+            int k=0;
+            for(k=0;k<5;k++){
+                printf("key = %s\n",al[k].keys );
+                printf("val = %s\n\n",al[k].values );
+            }
         }
          a++;
          
@@ -218,6 +224,16 @@ int pista_command(char **cmd_args) {
     // NO PISTA COMMAND!
     error_log("PISTA COMMAND 0!");
     return 0;
+}
+
+
+int is_alias(char *key) {
+    int i;
+    for(i = 0 ; i < 5 ; i++)
+        if(!strcmp(key, al[i].keys))
+            return i;
+
+    return -1;
 }
 
 
@@ -245,6 +261,11 @@ int pista_delegate(char ***commands) {
     while(commands[i] != NULL) {
         cmd_args = commands[i];
         //i++;  // moved to end of while loop to avoid confusion!
+
+        temp = is_alias(cmd_args[0]);
+        if(temp != -1) {
+            cmd_args[0] = al[temp].values;
+        }
 
         redirs = handle_redirections(cmd_args);
         if(!redirs) {
