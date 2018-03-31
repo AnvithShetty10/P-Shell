@@ -96,6 +96,10 @@ void print_welcome_message() {
     strcpy(histPath, getenv("HOME"));
     strcat(histPath, "/");
     strcat(histPath, HISTORY_FILE);
+    
+    getcwd(helpPath, PATH_MAX * sizeof(char));
+    strcat(helpPath, "/");
+    strcat(helpPath, HELP_FILE);
 
     printf("%s", "Welcome ");
     printf(BOLDCYAN "%s" RESET, getlogin());

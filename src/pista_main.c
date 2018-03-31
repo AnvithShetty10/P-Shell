@@ -174,7 +174,7 @@ int pista_command(char **cmd_args) {
     else if (!strcmp(cmd_args[0], "help")) {
         error_log("HELP matched!");
         char str;
-        int fd=open("help.txt",O_RDWR,0666);
+        int fd=open(helpPath,O_RDONLY);
         if(fd){
             while(read(fd,&str,sizeof(str)))
                 printf("%c",str);
@@ -189,7 +189,7 @@ int pista_command(char **cmd_args) {
     else if (!strcmp(cmd_args[0], "history")) {
         error_log("HISTORY matched!");
         char str;
-        int fd=open("history.txt",O_RDWR,0666);
+        int fd=open(histPath,O_RDWR);
         if(fd){
             while(read(fd,&str,sizeof(str)))
                 printf("%c",str);

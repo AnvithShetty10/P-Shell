@@ -46,6 +46,8 @@
 #define HISTORY_COUNT 25
 #define HISTORY_FILE "history.txt"
 
+#define HELP_FILE "help.txt"
+
 #define getlogin() getpwuid(getuid())->pw_name
 
 

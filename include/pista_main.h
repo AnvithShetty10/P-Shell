@@ -48,6 +48,7 @@ struct alias
 }al[100];
 
 char histPath[PATH_MAX];
+char helpPath[PATH_MAX];
 
 /* -------------------- Function Prototypes -------------------- */
 
