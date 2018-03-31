@@ -241,7 +241,7 @@ int pista_delegate(char ***commands) {
     error_log("Entered pista delegate");
 
     pid_t chpid;
-    int status = 0, i = 0, j, k, temp;
+    int status = 0, i = 0, j, k, temp, bg = 0;
     int **pipes = NULL, *children = NULL;
     char **cmd_args, **redirs = NULL;
     void *check_reallocs = NULL;
@@ -369,7 +369,7 @@ int pista_delegate(char ***commands) {
 
             error_log("FORKING instate = %d\toutstate = %d", instate, outstate);
 
-            spawn_child_cmd(cmd_args, instate, fdin, outstate, fdout, pipes, children, i);
+            bg = spawn_child_cmd(cmd_args, instate, fdin, outstate, fdout, pipes, children, i);
         }
         else 
             return temp;
@@ -377,32 +377,32 @@ int pista_delegate(char ***commands) {
         i++;    // loop variable! Important!
     }
 
-    
-    error_log("Pista going to wait for children");
-    int flag = 0;
-    for(j = 0 ; j < i ; j++) {
-        flag = 0;
-        while( (chpid = waitpid(-1, &status, WUNTRACED | WNOHANG)) < 0) ;
-        fflush(stdout); fflush(stderr);
+    if(!bg) {
+        error_log("Pista going to wait for children");
+        int flag = 0;
+        for(j = 0 ; j < i ; j++) {
+            flag = 0;
+            while( (chpid = waitpid(-1, &status, WUNTRACED | WNOHANG)) < 0) ;
+            fflush(stdout); fflush(stderr);
 
-        for(k = 0 ; k < i ; k++) {
-            if(children[k] == chpid) {
-                flag = !flag;
-                error_log("child k = %d", k);
-                close(pipes[k][WRITE_END]);
-                break;
+            for(k = 0 ; k < i ; k++) {
+                if(children[k] == chpid) {
+                    flag = !flag;
+                    error_log("child k = %d", k);
+                    close(pipes[k][WRITE_END]);
+                    break;
+                }
+            }
+
+            if(!flag)   // if non-forked child pid found, ignore it!
+                j--;
+            else {
+                if(WIFEXITED(status))
+                    error_log("%d exited with %d", chpid, WEXITSTATUS(status));
             }
         }
-
-        if(!flag)   // if non-forked child pid found, ignore it!
-            j--;
-        else {
-            if(WIFEXITED(status))
-                error_log("%d exited with %d", chpid, WEXITSTATUS(status));
-        }
+        error_log("Done waiting!");
     }
-    
-    error_log("Done waiting!");
     
     error_log("Restoring default FDs");
     dup2(savedin, STDIN_FILENO);
@@ -417,8 +417,18 @@ int pista_delegate(char ***commands) {
 }
 
 
-void spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr) {
+int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr) {
     pid_t pid;
+    
+    int bg = 0;
+    int i = 0;
+    char *temp;
+    while((temp = cmd_args[i+1]) != NULL)   // take temp to last but one cmd_args
+        i++;
+    if(!strcmp(cmd_args[i], "&")) {
+        bg = 1;
+        cmd_args[i] = NULL;
+    }
 
     pid = fork();
     if (pid < 0) {
@@ -464,6 +474,8 @@ void spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int f
         error_log("pid = %d", pid);
         children[curr] = pid;
     }
+
+    return bg;
 }
 
 

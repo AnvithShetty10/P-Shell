@@ -84,8 +84,9 @@ char **handle_redirections(char **cmd_args);
 
 /*
 Spawns child process to execute command. Also set's up it's STDIN and STDOUT using dups.
+Returns 1 if background process. Else returns 0.
 */
-void spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr);
+int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr);
 
 int write_history(char *,int, pid_t);
 #endif
