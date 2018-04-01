@@ -4,6 +4,7 @@ This file contains the functions of Pista shell itself. `psh` delegates work to 
 
 /* -------------------- Includes -------------------- */
 #include "pista_main.h"
+#include "cmd_processor.h"
 
 
 /* -------------------- Function Definitions -------------------- */
@@ -207,15 +208,15 @@ int pista_command(char **cmd_args) {
             temp_al_key=strsep(&temp_al_val, "=");
             strcpy(al[a].keys, temp_al_key);
             strcpy(al[a].values, temp_al_val);
+            a++;
         }
         else {
             int k=0;
-            for(k=0;k<5;k++){
+            for(k=0;k<a;k++){
                 printf("key = %s\n",al[k].keys );
                 printf("val = %s\n\n",al[k].values );
             }
         }
-         a++;
          
         error_log("PISTA COMMAND 7!");
         return 7;
@@ -243,7 +244,7 @@ int pista_delegate(char ***commands) {
     pid_t chpid;
     int status = 0, i = 0, j, k, temp, bg = 0;
     int **pipes = NULL, *children = NULL;
-    char **cmd_args, **redirs = NULL;
+    char **cmd_args, **redirs = NULL, **alias_cmd_args = NULL;
     void *check_reallocs = NULL;
     
     // Save STDIN STDOUT
@@ -264,7 +265,33 @@ int pista_delegate(char ***commands) {
 
         temp = is_alias(cmd_args[0]);
         if(temp != -1) {
-            cmd_args[0] = al[temp].values;
+            char *tempaliasvalue = strdup(al[temp].values);
+            alias_cmd_args = parse_cmd_args(tempaliasvalue);
+            int i, aliaslen = 0;
+            char *temp = alias_cmd_args[0];
+            while(temp)
+                temp = alias_cmd_args[++aliaslen];
+            
+            int cmd_args_len = 0;
+            temp = cmd_args[0];
+            while(temp)
+                temp = cmd_args[++cmd_args_len];
+
+            error_log("Alias len %d; cmdlen %d", aliaslen, cmd_args_len);
+
+            alias_cmd_args = (char **)realloc(alias_cmd_args, sizeof(char *) * (aliaslen + cmd_args_len));
+            
+            temp = cmd_args[1];
+            i = 1;
+            while(temp) {
+                alias_cmd_args[aliaslen++] = cmd_args[i];
+                temp = cmd_args[i++];
+            }
+            alias_cmd_args[aliaslen] = NULL;
+            cmd_args = alias_cmd_args;
+
+            for(i = 0 ; i <= aliaslen ; i++)
+                error_log("final %s", cmd_args[i]);
         }
 
         redirs = handle_redirections(cmd_args);
@@ -459,7 +486,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
 
         int check_exec = execvp(cmd_args[0], cmd_args);
 
-        error_log("CHILD Print post exec! THIS SHOULD NOT HAPPEN! errno = %d", errno);
+        error_log("CHILD Print post exec %s! THIS SHOULD NOT HAPPEN! errno = %d", cmd_args[0], errno);
         if (check_exec < 0)
         {
             #ifdef DEBUG_MODE

@@ -32,4 +32,9 @@ The last entry in the 3D array that is returned is NULL; makes it easy to use.
 */
 char ***parse_commands(char *full_cmd);
 
+/*
+Custom replacement for strsep to tokenize a string but keep substrings enclosed in quotes as a single token.
+*/
+void tokenize(char **s_);
+
 #endif

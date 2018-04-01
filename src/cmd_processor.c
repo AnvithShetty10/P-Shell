@@ -52,7 +52,14 @@ char **parse_cmd_args(char *full_cmd) {
         }
 
         ret[count++] = temp;
-        
+
+        // Process env variables
+        if(ret[count-1][0] == '$') {
+            ret[count-1] = getenv(ret[count-1] + 1);
+        }
+
+        tokenize(&temp);
+
         // If string is given in quotes, remove the quotes
         int index, len = strlen(ret[count-1]), jindex;
         for(index = 0 ; index < len ; index++) {
@@ -65,13 +72,6 @@ char **parse_cmd_args(char *full_cmd) {
         }
 
         ret[count-1][len] = 0;      // set new nul char to terminate string
-
-        // Process env variables
-        if(ret[count-1][0] == '$') {
-            ret[count-1] = getenv(ret[count-1] + 1);
-        }
-
-        strsep(&temp, " \t");
 
     }while(temp);
 
@@ -134,4 +134,25 @@ char ***parse_commands(char *full_cmd) {
 
     error_log("Done parsing command!");
     return ret;
+}
+
+
+void tokenize(char **s_) {
+    char *s = *s_;
+    int i;
+
+    for(i = 0 ; s[i] ; i++) {
+        switch(s[i]) {
+            case '"':
+                for( ; s[i] == '"' || s[i] ; i++);
+            break;
+
+            case ' ': case '\t':
+                s[i] = 0;
+                *s_ = s + i + 1;
+                return;
+        }
+    }
+
+    *s_ = NULL;
 }
