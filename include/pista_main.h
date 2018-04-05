@@ -43,8 +43,8 @@
 /* -------------------- Globals -------------------- */
 struct alias
 {
-	char keys[20];
-	char values[20];
+	char keys[50];
+	char values[100];
 }al[100];
 
 char histPath[PATH_MAX];

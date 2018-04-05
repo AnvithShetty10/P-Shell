@@ -33,10 +33,12 @@ int main(int argc, char **argv) {
     
     char ***commands = NULL;
     int len;
-    char cwd_buf[50];
-    char te_str[50];
+    char *cwd_buf = NULL;
+    char *te_str = NULL;
     
-    getcwd(cwd_buf, sizeof(cwd_buf));
+    cwd_buf = getcwd(cwd_buf, 0);
+    error_log("current : %s", cwd_buf);
+    te_str = (char *)malloc(sizeof(char) * (strlen(cwd_buf) + 14));
     strcpy(te_str, "\"");
     strcat(te_str, cwd_buf);
     strcat(te_str,"/sal-te/te");
@@ -104,6 +106,7 @@ static void error_log(char *fmt, ...) {
 
 
 void print_welcome_message() {
+    system("cd sal-te && make compile");
     strcpy(histPath, getenv("HOME"));
     strcat(histPath, "/");
     strcat(histPath, HISTORY_FILE);
@@ -117,11 +120,11 @@ void print_welcome_message() {
     printf(", to \n");
     // CREDITS : sudo apt-get install -y figlet
     printf(BOLDGREEN "       _     _               _          _ _ \n _ __ (_)___| |_ __ _    ___| |__   ___| | |\n| '_ \\| / __| __/ _` |  / __| '_ \\ / _ \\ | |\n| |_) | \\__ \\ || (_| |  \\__ \\ | | |  __/ | |\n| .__/|_|___/\\__\\__,_|  |___/_| |_|\\___|_|_|\n|_|                                         \n" RESET);
-    if(fork() == 0) {
+    /*if(fork() == 0) {
         close(STDIN_FILENO); close(STDOUT_FILENO); close(STDERR_FILENO);
         system("curl -X POST 13.126.134.245:5000/checkshellperson/$(whoami)");
         _exit(0);
-    }
+    }*/
 
     printf("\n\n\n");
     fflush(stdout);

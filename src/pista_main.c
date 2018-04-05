@@ -5,6 +5,7 @@ This file contains the functions of Pista shell itself. `psh` delegates work to 
 /* -------------------- Includes -------------------- */
 #include "pista_main.h"
 #include "cmd_processor.h"
+int _a = 1;
 
 
 /* -------------------- Function Definitions -------------------- */
@@ -85,7 +86,6 @@ int write_history(char *buf,int current,pid_t pid){
 }
 
 
-int a=1;
 int pista_command(char **cmd_args) {
     char *temp = NULL;
     char *temp_al_val=cmd_args[1];
@@ -207,13 +207,13 @@ int pista_command(char **cmd_args) {
         error_log("ALIAS matched!");
         if(cmd_args[1]) {
             temp_al_key=strsep(&temp_al_val, "=");
-            strcpy(al[a].keys, temp_al_key);
-            strcpy(al[a].values, temp_al_val);
-            a++;
+            strcpy(al[_a].keys, temp_al_key);
+            strcpy(al[_a].values, temp_al_val);
+            _a++;
         }
         else {
             int k=0;
-            for(k=0;k<a;k++){
+            for(k=0;k<_a;k++){
                 printf("key = %s\n",al[k].keys );
                 printf("val = %s\n\n",al[k].values );
             }
