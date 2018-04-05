@@ -33,7 +33,18 @@ int main(int argc, char **argv) {
     
     char ***commands = NULL;
     int len;
+    char cwd_buf[50];
+    char te_str[50];
     
+    getcwd(cwd_buf, sizeof(cwd_buf));
+    strcpy(te_str, "\"");
+    strcat(te_str, cwd_buf);
+    strcat(te_str,"/sal-te/te");
+    strcat(te_str, "\"");
+    
+    strcpy(al[0].keys,"te");
+	strcpy(al[0].values,te_str);
+
     char *buf = (char *)malloc(sizeof(char) * BUF_SIZE_LIMIT);
     do {
         print_prompt();
@@ -41,9 +52,9 @@ int main(int argc, char **argv) {
         check_input = fgets(buf, BUF_SIZE_LIMIT, stdin);    // returns NULL if EOF is found (CTRL-D)
         len = strlen(buf);
         current = (current + 1) % HISTORY_COUNT;
-        
+        if(strlen(buf)>0){
         write_history(buf,current,getpid());        
-        
+        }
         error_log("Input taken : %p %s %d %d %d", check_input, buf, len, len > 1, check_input && len > 1);
         if(check_input && len > 1) {
             error_log("Processing the command...");

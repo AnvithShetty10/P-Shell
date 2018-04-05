@@ -43,7 +43,7 @@
 /* -------------------- Globals -------------------- */
 struct alias
 {
-	char keys[2];
+	char keys[20];
 	char values[20];
 }al[100];
 
@@ -75,7 +75,8 @@ value   |                       |
 4       | export                |
 5		| help                  |
 6		| history				|
-7		| alias 				|
+7		| alias 		
+8		| hc
 --------------------------------
 */
 int pista_delegate(char ***commands);
