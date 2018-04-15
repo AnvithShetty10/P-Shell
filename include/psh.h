@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-
+#include <stdint.h>
 
 /* -------------------- System Libraries -------------------- */
 #include <unistd.h>
@@ -53,12 +53,12 @@
 
 /* -------------------- Globals -------------------- */
 int _prompt_type = 0;
-
+int hist_cmd_count;
 
 /* -------------------- Function Prototypes -------------------- */
 void print_welcome_message();
 void print_prompt();
-
+int count_history();
 
 #endif
 

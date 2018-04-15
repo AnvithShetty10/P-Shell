@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <pthread.h>
+#include <stdint.h>
 
 
 /* -------------------- System Libraries -------------------- */
@@ -50,6 +51,7 @@ struct alias
 char histPath[PATH_MAX];
 char helpPath[PATH_MAX];
 
+char command[25][50],info[25][50];
 /* -------------------- Function Prototypes -------------------- */
 
 /*

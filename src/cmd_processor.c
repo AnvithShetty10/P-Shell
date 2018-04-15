@@ -4,7 +4,7 @@ This file handles everything related to command string processing, such as, extr
 
 /* -------------------- Includes -------------------- */
 #include "cmd_processor.h"
-
+#include "pista_main.h"
 
 /* -------------------- Statics and Globals -------------------- */
 
@@ -29,6 +29,252 @@ static void error_log(char *fmt, ...) {
 
 
 /* -------------------- Function Definitions -------------------- */
+int curr=0;
+int command_index=0;
+extern int hist_cmd_count;
+char *processor(char *buf) {
+    error_log("processor!");
+    error_log("buf is %p", buf);
+    set_terminal();
+    int blen = 0;
+    char fc[4];
+    fc[0] = getPressedKey();
+    error_log("got fc0 as %c %d", fc[0], fc[0]);
+    while(fc[0] != '\n' && fc[0] != '\r') {
+        if (fc[0]=='\b')
+        {
+            restore_terminal();
+            printf("%c",'\b');
+            fflush(stdout);
+            set_terminal();
+        }
+        else if (fc[0] == 27) { // if the first value is esc
+            fc[1] = getPressedKey();
+            if(fc[1] == 91){           //Can usee '[' also
+                fc[2] = getPressedKey();
+                switch(fc[2]) { 
+                    case 'A':
+                        if(curr!=hist_cmd_count)
+                            UpArrow();
+                        break;
+                    case 'B':
+                        if(curr!=0)
+                            DownArrow();
+                        break;
+                    case 'C':
+                        break;
+                    case 'D':
+                        break;
+                    }
+                }
+            }
+        else {
+            error_log("processor ELSE blen = %d", blen);
+            buf[blen] = fc[0];
+            blen += 1;
+            curr=0;
+            restore_terminal();
+            printf("%c", fc[0]);
+            fflush(stdout);
+            set_terminal();
+        }
+        fc[0] = getPressedKey();
+        error_log("got fc0 as %c %d", fc[0], fc[0]);
+    }
+
+    buf[blen] = 0;
+    restore_terminal();
+    //write(STDOUT_FILENO, '\r', sizeof(char));
+    printf("\n");
+    error_log("buf is %s", buf);
+    return buf;
+}
+
+struct termios oldt, newt;
+int set_terminal(){
+    error_log("set terminal!");
+    // get current terminal properties
+    if (tcgetattr(0 , &(oldt)) != 0) {
+        perror("Couldn't get terminal properties!");
+        exit(0);
+    }
+    /*now the settings will be copied*/
+    newt = oldt;
+   /* newt.c_iflag &= ~(IXON | ICRNL); 
+    // disable ctrl-S and ctrl-Q (software data flow control), ctrl-m, 
+
+    newt.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG); 
+    // disable echoing, canonical mode (so we can read byte-by-byte), ctrl-v and ctrl-o, ctrl-C
+
+    newt.c_oflag &= ~(OPOST);
+    // disable output processing
+
+    newt.c_oflag &= ~(BRKINT | INPCK | ISTRIP | CS8);
+    // for compatibility apparently*/
+    
+    //cfmakeraw(&newt);
+
+    newt.c_lflag &= ~ICANON; /* disable buffered i/o */
+    newt.c_lflag &= ~ECHO; /* set echo mode */
+    /* use these new terminal i/o settings now */
+    if (tcsetattr(0, TCSANOW, &newt) != 0) {
+        perror("Couldn't set terminal properties!");
+        exit(0);
+    }
+
+/*    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &newt) != 0) {
+        perror("Couldn't set terminal properties!");
+        exit(0);
+    }
+*/
+  return 0;
+
+}
+
+int restore_terminal(){
+    error_log("restore terminal!");
+    /*restore the old settings*/
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+    return 0;
+}
+
+char getPressedKey() {
+    char c;
+
+    if(read(STDIN_FILENO, &c, 1) < 1) {
+        perror("Read error");
+        exit(0);
+    }
+
+    return c;
+}
+extern int reverse_flag;
+char hist_command[25][50];
+void readfileinreverse(FILE *fp)
+{
+    int i, size, start, loop, counter;
+    int k,j,space;
+    char *buffer;
+    char line[256];
+    start = 0;
+    fseek(fp, 0, SEEK_END);
+    size = ftell(fp);
+    char hist_cmd[256];
+
+    buffer = malloc((size+1) * sizeof(char));
+
+    for (i=0; i< size; i++)
+    {
+        fseek(fp, size-1-i, SEEK_SET);
+        buffer[i] = fgetc(fp);
+
+        if(buffer[i] == 10)
+        {
+           if(i != 0)
+           {
+            counter = 0;        
+            for(loop = i; loop > start; loop--)
+            {
+                if((counter == 0) && (buffer[loop] == 10))
+                {
+                    continue;
+                }               
+                line[counter] = buffer[loop];
+                counter++;
+            }
+            line[counter] = 0;
+            start = i;
+
+            k=0;
+            space=0;
+            while(line[k]!='\0'){
+                if(line[k] == ' ')
+                    space++;
+                if(space == 7)
+                    break;
+                else
+                    k++;
+            }
+            j=0;
+            k+=2;
+            strcpy(hist_cmd,"");
+            while(line[k]!='\0'){
+                hist_cmd[j] = line[k];
+                k++;
+                j++;
+            }
+                hist_cmd[j++]='\0';
+
+            strcpy(hist_command[command_index++],hist_cmd);
+            
+           }
+        }
+    }
+
+    //For the first command
+    if(i > start)
+        {    
+            counter = 0;
+            for(loop = i; loop > start; loop--)
+            {       
+                if((counter == 0) && ((buffer[loop] == 10) || (buffer[loop] == 0)))
+                {
+                    continue;
+                }               
+                line[counter] = buffer[loop];
+                counter++;
+            }
+            line[counter] = 0;
+        }
+
+        k=0;
+        space=0;
+        while(line[k]!='\0'){
+            if(line[k] == ' ')
+                space++;
+            if(space == 7)
+                break;
+            else
+                k++;
+        }
+
+        j=0;
+        k+=2;
+        strcpy(hist_cmd,"");
+        while(line[k]!='\0'){
+            hist_cmd[j] = line[k];
+            k++;
+            j++;
+        }
+
+        hist_cmd[j++]='\0';
+        strcpy(hist_command[command_index++],hist_cmd);
+        reverse_flag=0;
+    return;
+}
+int UpArrow(){
+    error_log("up arrow");
+    FILE * fd=fopen(histPath,"r");
+    if (reverse_flag==1)
+    {
+        readfileinreverse(fd);
+    }
+    printf("%s\n",hist_command[curr++] );
+    fclose(fd);
+    print_prompt();
+    error_log("leaving up arrow");
+    return 0;
+}
+
+int DownArrow(){
+    error_log("down arrow");
+    FILE * fd=fopen(histPath,"r");
+    printf("%s\n",hist_command[--curr] );
+    fclose(fd);
+    print_prompt();
+    error_log("leaving down arrow");
+    return 0;
+}
 
 char **parse_cmd_args(char *full_cmd) {
     char **ret = NULL;
@@ -90,7 +336,6 @@ char **parse_cmd_args(char *full_cmd) {
     #ifdef DEBUG_MODE
     int i = 0; temp = *(ret + i); while(temp) { error_log("CMDARGS %s", temp); temp = *(ret + ++i); }
     #endif
-
     error_log("Done parsing command and args!");
     return ret;
 }

@@ -55,8 +55,8 @@ char *itoa(int i) {
     return ret;
 }
 
-
-char command[25][50],info[25][50];
+extern int hist_cmd_count;
+int reverse_flag=0;
 int write_history(char *buf,int current,pid_t pid){
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -76,11 +76,14 @@ int write_history(char *buf,int current,pid_t pid){
          strcat(command[current],buf);
          if (info[current][strlen(info[current])-1]=='\n') info[current][strlen(info[current])-1]='\0';     
          strcat(info[current],command[current]);
-       	}	  
+
+        }	  
     if(fd){
             write(fd,info[current],strlen(info[current])+1);
+            hist_cmd_count++;
+            reverse_flag=1;
+            write(fd,"\n",1);
         }
-       
     close(fd);    
     return 0;
 }
@@ -227,7 +230,7 @@ int pista_command(char **cmd_args) {
     else if (!strcmp(cmd_args[0], "hc")) {
         error_log("HC matched!");
         remove(histPath);   
-        
+        hist_cmd_count=0;
         error_log("PISTA COMMAND 8!");
         return 5;
     }    

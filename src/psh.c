@@ -24,11 +24,11 @@ void print_welcome_message();
 void print_prompt();
 
 int current=0;
-
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
     print_welcome_message();
-    
+    hist_cmd_count=count_history();
+        
     char *check_input = NULL;
     
     char ***commands = NULL;
@@ -51,7 +51,9 @@ int main(int argc, char **argv) {
     do {
         print_prompt();
         strcpy(buf, "");
-        check_input = fgets(buf, BUF_SIZE_LIMIT, stdin);    // returns NULL if EOF is found (CTRL-D)
+        //check_input = fgets(buf, BUF_SIZE_LIMIT, stdin);    // returns NULL if EOF is found (CTRL-D)
+        error_log("buf is %p", buf);
+        check_input = processor(buf);
         len = strlen(buf);
         current = (current + 1) % HISTORY_COUNT;
         if(strlen(buf)>0){
@@ -60,7 +62,7 @@ int main(int argc, char **argv) {
         error_log("Input taken : %p %s %d %d %d", check_input, buf, len, len > 1, check_input && len > 1);
         if(check_input && len > 1) {
             error_log("Processing the command...");
-            buf[len-1] = 0;     // remove trailing \n
+            //buf[len-1] = 0;     // remove trailing \n
             commands = parse_commands(buf);
             switch(pista_delegate(commands)) {
                 case 1:
@@ -132,8 +134,23 @@ void print_welcome_message() {
     return;
 }
 
+int count_history(){
+    FILE *fp = fopen(histPath,"r");
+    int lines=0;
+    char ch;
+    while(!feof(fp))
+    {
+      ch = fgetc(fp);
+      if(ch == '\n')
+      {
+        lines++;
+      }
+    }
+    return lines;
+}
 
 void print_prompt() {
+    //printf("\n");
     fflush(stdout);
     char *temp = NULL;
     char *dirc =NULL, *dname =NULL;

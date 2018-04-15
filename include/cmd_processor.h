@@ -6,12 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-
+#include <stdint.h>
 
 /* -------------------- System Libraries -------------------- */
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <termios.h>
 
 
 /* -------------------- Globals -------------------- */
@@ -36,5 +37,16 @@ char ***parse_commands(char *full_cmd);
 Custom replacement for strsep to tokenize a string but keep substrings enclosed in quotes as a single token.
 */
 void tokenize(char **s_);
+
+char *processor(char *buf);
+
+char getPressedKey();
+
+int UpArrow();
+int DownArrow();
+
+void readfileinreverse(FILE *);
+int set_terminal();
+int restore_terminal();
 
 #endif
