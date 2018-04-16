@@ -136,6 +136,8 @@ void print_welcome_message() {
 
 int count_history(){
     FILE *fp = fopen(histPath,"r");
+    if(fp == NULL)
+        return 0;
     int lines=0;
     char ch;
     while(!feof(fp))

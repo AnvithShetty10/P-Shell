@@ -56,6 +56,7 @@ char *itoa(int i) {
 }
 
 extern int hist_cmd_count;
+extern int command_index;
 int reverse_flag=0;
 int write_history(char *buf,int current,pid_t pid){
     time_t t = time(NULL);
@@ -82,6 +83,7 @@ int write_history(char *buf,int current,pid_t pid){
             write(fd,info[current],strlen(info[current])+1);
             hist_cmd_count++;
             reverse_flag=1;
+            command_index = 0;
             write(fd,"\n",1);
         }
     close(fd);    

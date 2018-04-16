@@ -149,14 +149,16 @@ char getPressedKey() {
     return c;
 }
 extern int reverse_flag;
-char hist_command[25][50];
+char hist_command[100][50];
 void readfileinreverse(FILE *fp)
 {
+    error_log("readfile in reverse!");
     int i, size, start, loop, counter;
     int k,j,space;
     char *buffer;
     char line[256];
     start = 0;
+    error_log("set start to 0");
     fseek(fp, 0, SEEK_END);
     size = ftell(fp);
     char hist_cmd[256];
@@ -205,7 +207,10 @@ void readfileinreverse(FILE *fp)
             }
                 hist_cmd[j++]='\0';
 
+            if(command_index >= 100)
+                break;
             strcpy(hist_command[command_index++],hist_cmd);
+            error_log("loaded %s to history at %d", hist_cmd, command_index);
             
            }
         }
@@ -253,7 +258,7 @@ void readfileinreverse(FILE *fp)
     return;
 }
 int UpArrow(){
-    error_log("up arrow");
+    error_log("up arrow, rev flag = %d", reverse_flag);
     FILE * fd=fopen(histPath,"r");
     if (reverse_flag==1)
     {
