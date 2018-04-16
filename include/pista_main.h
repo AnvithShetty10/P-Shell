@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <dirent.h>
 
 
 /* -------------------- System Libraries -------------------- */

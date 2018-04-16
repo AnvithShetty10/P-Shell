@@ -237,6 +237,79 @@ int pista_command(char **cmd_args) {
         return 5;
     }    
     
+    // wildcard * at end
+    else if (!strcmp(cmd_args[0], "ls") && ((cmd_args[1][strlen(cmd_args[1])-1]=='*') || (cmd_args[1][strlen(cmd_args[1])-1]=='?'))) {
+    	
+    		char rem[20];
+			int q=0, k=0, p=0;
+			char temp_fname[30];
+			int fname_len=0;
+			int cmd_len=0, rem_len=0;
+			
+			cmd_len=strlen(cmd_args[1]);
+    		char *path=".";
+			DIR *dirp=opendir(path);
+			struct dirent *dp;
+	
+			for(q=0; q<cmd_len-1; q++)
+			{
+				rem[k++]=cmd_args[1][q];
+			}
+			rem_len=strlen(rem);
+			
+			if(cmd_args[1][strlen(cmd_args[1])-1]=='*')
+			{
+				while((dp=readdir(dirp)) != NULL)
+				{
+					int ctr=0;
+					strcpy(temp_fname, dp->d_name);
+			
+				
+					for(p=0; p<rem_len; p++)
+					{
+						if(temp_fname[p]==rem[p])
+						{
+							ctr++;
+						}
+					}
+				
+					if(ctr==rem_len)
+					{
+						printf("%s\n",dp->d_name);
+					}
+				}	
+			}
+			
+			else if(cmd_args[1][strlen(cmd_args[1])-1]=='?')
+			{
+				while((dp=readdir(dirp)) != NULL)
+				{
+					int ctr2=0;
+					strcpy(temp_fname, dp->d_name);
+					fname_len=strlen(temp_fname);
+				
+					for(p=0; p<rem_len; p++)
+					{
+						if(temp_fname[p]==rem[p])
+						{
+							ctr2++;
+						}
+					}
+				
+					if((ctr2==rem_len) && (fname_len==(rem_len+1)))
+					{
+						printf("%s\n",dp->d_name);
+					}
+				}	
+			}
+			
+       		error_log("Wildcard matched!");
+       	
+    		
+       // error_log("PISTA COMMAND 9!");
+       // return 9;
+    }  
+    
     // NO PISTA COMMAND!
     error_log("PISTA COMMAND 0!");
     return 0;
