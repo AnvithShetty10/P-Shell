@@ -657,3 +657,4 @@ char **handle_redirections(char **cmd_args) {
 
     return ret;
 }
+

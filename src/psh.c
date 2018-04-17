@@ -24,14 +24,14 @@ void print_welcome_message();
 void print_prompt();
 
 int current=0;
+char *check_input = NULL;    
+char ***commands = NULL;
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
     print_welcome_message();
     hist_cmd_count=count_history();
         
-    char *check_input = NULL;
     
-    char ***commands = NULL;
     int len;
     char *cwd_buf = NULL;
     char *te_str = NULL;
@@ -63,21 +63,7 @@ int main(int argc, char **argv) {
         if(check_input && len > 1) {
             error_log("Processing the command...");
             //buf[len-1] = 0;     // remove trailing \n
-            commands = parse_commands(buf);
-            switch(pista_delegate(commands)) {
-                case 1:
-                    _prompt_type = !_prompt_type;
-                    break;
-
-                case 2:
-                    check_input = NULL;
-                    break;
-                
-                default:
-                    strcpy(buf, "");
-            }
-
-            free(commands);    
+            execute_command(check_input);    
         }
         
     }while(check_input);
@@ -106,6 +92,24 @@ static void error_log(char *fmt, ...) {
 }
 #endif
 
+void execute_command(char *buf){
+            
+            commands = parse_commands(buf);
+            switch(pista_delegate(commands)) {
+                case 1:
+                    _prompt_type = !_prompt_type;
+                    break;
+
+                case 2:
+                    check_input = NULL;
+                    break;
+                
+                default:
+                    strcpy(buf, "");
+            }
+
+            free(commands);
+}
 
 void print_welcome_message() {
     system("cd sal-te && make compile");
@@ -168,7 +172,6 @@ void print_prompt() {
             strcat(temp, ":");
             strcat(temp, cwd);
             strcat(temp, " => \0");
-
             printf(GREEN "%s" RESET, temp);
             break;
             
@@ -178,7 +181,6 @@ void print_prompt() {
             strcat(temp, "-->> \0");
             dirc = strdup(temp);
             dname = basename(dirc);
-            
 		
             printf(GREEN "%s" RESET, dname);
         	break;

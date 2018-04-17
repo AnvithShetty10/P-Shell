@@ -32,6 +32,10 @@ static void error_log(char *fmt, ...) {
 int curr=0;
 int command_index=0;
 extern int hist_cmd_count;
+extern int reverse_flag;
+char hist_command[100][50];
+int switch_arrow = 0;
+
 char *processor(char *buf) {
     error_log("processor!");
     error_log("buf is %p", buf);
@@ -41,25 +45,40 @@ char *processor(char *buf) {
     fc[0] = getPressedKey();
     error_log("got fc0 as %c %d", fc[0], fc[0]);
     while(fc[0] != '\n' && fc[0] != '\r') {
-        if (fc[0]=='\b')
-        {
-            restore_terminal();
-            printf("%c",'\b');
+        if (fc[0]==127)
+        {   blen--;
+            if(blen>=0){
+            printf("\b \b");
             fflush(stdout);
-            set_terminal();
+            }
         }
         else if (fc[0] == 27) { // if the first value is esc
             fc[1] = getPressedKey();
-            if(fc[1] == 91){           //Can usee '[' also
+            if(fc[1] == 91){           //Can use '[' also
                 fc[2] = getPressedKey();
                 switch(fc[2]) { 
                     case 'A':
                         if(curr!=hist_cmd_count)
+                            {
+                            clear_prompt_up();
                             UpArrow();
+                            strcpy(buf,hist_command[curr-1]);
+                            blen = strlen(buf);
+                            fflush(stdout);
+                            }
                         break;
                     case 'B':
-                        if(curr!=0)
+                        if(curr!=0){
+                            clear_prompt_down();
                             DownArrow();
+                            strcpy(buf,hist_command[curr+1]);
+                            blen = strlen(buf);
+                            fflush(stdout);
+                        }
+                        else if(curr==0){
+                            clear_prompt_down();
+                            fflush(stdout);
+                        }
                         break;
                     case 'C':
                         break;
@@ -148,8 +167,7 @@ char getPressedKey() {
 
     return c;
 }
-extern int reverse_flag;
-char hist_command[100][50];
+
 void readfileinreverse(FILE *fp)
 {
     error_log("readfile in reverse!");
@@ -257,6 +275,29 @@ void readfileinreverse(FILE *fp)
         reverse_flag=0;
     return;
 }
+
+void clear_prompt_up(){
+    int i;
+    fflush(stdout);
+    for(i=0;i<100;i++)
+        {
+            printf("\b \b");
+        }
+    fflush(stdout);
+    print_prompt();
+}
+
+void clear_prompt_down(){
+    int i;
+    fflush(stdout);
+    for(i=0;i<100;i++)
+        {
+            printf("\b \b");
+        }
+    fflush(stdout);
+    print_prompt();
+}
+
 int UpArrow(){
     error_log("up arrow, rev flag = %d", reverse_flag);
     FILE * fd=fopen(histPath,"r");
@@ -264,9 +305,11 @@ int UpArrow(){
     {
         readfileinreverse(fd);
     }
-    printf("%s\n",hist_command[curr++] );
+    printf("%s",hist_command[curr++] );
     fclose(fd);
-    print_prompt();
+    if(switch_arrow==0)
+        switch_arrow=1;
+    //print_prompt();
     error_log("leaving up arrow");
     return 0;
 }
@@ -274,9 +317,13 @@ int UpArrow(){
 int DownArrow(){
     error_log("down arrow");
     FILE * fd=fopen(histPath,"r");
-    printf("%s\n",hist_command[--curr] );
+    if(switch_arrow==1){
+        curr-=1;
+        switch_arrow=0;
+    }
+    printf("%s",hist_command[--curr] );
     fclose(fd);
-    print_prompt();
+    //print_prompt();
     error_log("leaving down arrow");
     return 0;
 }

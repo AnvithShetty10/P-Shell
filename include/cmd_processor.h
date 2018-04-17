@@ -48,5 +48,6 @@ int DownArrow();
 void readfileinreverse(FILE *);
 int set_terminal();
 int restore_terminal();
-
+void clear_prompt_up();
+void clear_prompt_down();
 #endif

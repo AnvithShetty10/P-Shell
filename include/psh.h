@@ -56,6 +56,7 @@ int _prompt_type = 0;
 int hist_cmd_count;
 
 /* -------------------- Function Prototypes -------------------- */
+void execute_command(char *);
 void print_welcome_message();
 void print_prompt();
 int count_history();
