@@ -238,7 +238,9 @@ int pista_command(char **cmd_args) {
     }    
     
     // wildcard * or ? at end
-    else if (!strcmp(cmd_args[0], "ls") && ((cmd_args[1][strlen(cmd_args[1])-1]=='*') || (cmd_args[1][strlen(cmd_args[1])-1]=='?'))) {
+    else if (cmd_args[1] != NULL) {
+        error_log("Going to check for wildcard");
+        if(!strcmp(cmd_args[0], "ls") && ((cmd_args[1][strlen(cmd_args[1])-1]=='*') || (cmd_args[1][strlen(cmd_args[1])-1]=='?'))) {
     	
     		char rem[20];
 			int q=0, k=0, p=0;
@@ -304,10 +306,8 @@ int pista_command(char **cmd_args) {
 			}
 			
        		error_log("Wildcard matched!");
-       	
-    }  
-    
-     // wildcard * or ? at beginning
+        }
+       	 // wildcard * or ? at beginning
     else if (!strcmp(cmd_args[0], "ls") && ((cmd_args[1][0]=='*') || (cmd_args[1][0]=='?'))) {
     	
     		char rem[20];
@@ -374,6 +374,8 @@ int pista_command(char **cmd_args) {
 			}
 			
        		error_log("Wildcard matched!");
+        }  
+
        	
     }  
     
