@@ -491,7 +491,7 @@ int pista_delegate(char ***commands) {
                 // handle output
                 if(outfile) {
                     outstate = 3;
-                    fdout = open(outfile, O_CREAT | O_TRUNC | O_WRONLY, 0664);   // open output file! OUTPUT redirection done here!
+                    fdout = open(outfile, O_CREAT | O_WRONLY | O_APPEND, 0664);   // open output file! OUTPUT redirection done here!
                     if(fdout < 0) perror("OP open error");
                 }
                 else {
@@ -667,11 +667,11 @@ char **handle_redirections(char **cmd_args) {
     char **ret = (char **)malloc(sizeof(char *) * 2);   // input file and output file names
     ret[0] = ret[1] = NULL;
     
-    int i = 0;
+    int i = 0, temp;
     while(cmd_args[i]) {
         if(cmd_args[i][0] == '<') {
             if(cmd_args[i+1]) {
-                int temp = open(cmd_args[i+1], O_RDONLY);
+                temp = open(cmd_args[i+1], O_RDONLY);
                 if(temp < 0) {
                     perror(RED "Input file error");
                     fprintf(stderr, RESET);
@@ -695,6 +695,16 @@ char **handle_redirections(char **cmd_args) {
         }
         else if(cmd_args[i][0] == '>') {
             if(cmd_args[i+1]) {
+                temp = open(cmd_args[i+1], O_RDWR);
+                if(temp < 0) {
+                    perror(RED "Output file error");
+                    fprintf(stderr, RESET);
+                    return NULL;
+                }
+                if(cmd_args[i][1] != '>')
+                    ftruncate(temp, 0);
+                close(temp);
+
                 int temp = open(cmd_args[i+1], O_RDONLY);
                 if(temp < 0) {
                     perror(RED "Output file error");
