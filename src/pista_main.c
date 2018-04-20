@@ -251,6 +251,14 @@ int pista_command(char **cmd_args) {
             cmd_args[t] = NULL;
             timed_cmd = timeoutVal;
         }
+        else {
+            int t = 0;
+            while(cmd_args[t+1] != NULL) {
+                cmd_args[t] = cmd_args[t+1];
+                t++;
+            }
+            cmd_args[t] = NULL;
+        }
     }
     
     // wildcard * or ? at end
