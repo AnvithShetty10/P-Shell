@@ -42,14 +42,16 @@ char *processor(char *buf) {
     set_terminal();
     int blen = 0;
     char fc[4];
+    int stop_right = 0;
     fc[0] = getPressedKey();
     error_log("got fc0 as %c %d", fc[0], fc[0]);
     while(fc[0] != '\n' && fc[0] != '\r') {
         if (fc[0]==127)
-        {   blen--;
-            if(blen>=0){
-            printf("\b \b");
-            fflush(stdout);
+        {   
+            if(blen>0){
+                blen--;
+                printf("\b \b");
+                fflush(stdout);
             }
         }
         else if (fc[0] == 27) { // if the first value is esc
@@ -81,8 +83,31 @@ char *processor(char *buf) {
                         }
                         break;
                     case 'C':
+                        error_log("case c blen = %d", blen);
+                        if(!stop_right) {
+                            if(buf[blen] == 0) {
+                                stop_right = 1;
+                            }
+                            else {
+                                blen++;
+                                restore_terminal();
+                                printf("\033[1C");
+                                fflush(stdout);
+                                set_terminal();
+                            }
+                        }
                         break;
                     case 'D':
+                        error_log("case d blen = %d", blen);
+                        if(blen > 0){
+                            blen--;
+                            error_log("blen = %d", blen);
+                            restore_terminal();
+                            printf("\033[1D");
+                            fflush(stdout);
+                            set_terminal();
+                            stop_right = 0;
+                        }
                         break;
                     }
                 }
@@ -91,6 +116,7 @@ char *processor(char *buf) {
             error_log("processor ELSE blen = %d", blen);
             buf[blen] = fc[0];
             blen += 1;
+            buf[blen] = 0;
             curr=0;
             restore_terminal();
             printf("%c", fc[0]);
@@ -102,6 +128,7 @@ char *processor(char *buf) {
     }
 
     buf[blen] = 0;
+    curr = 0;
     restore_terminal();
     //write(STDOUT_FILENO, '\r', sizeof(char));
     printf("\n");

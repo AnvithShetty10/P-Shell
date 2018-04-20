@@ -6,5 +6,7 @@ tests/
 .vscode.
 pista_logs.txt
 test.c
-psh.dSYM/
+*.dSYM/
 history.txt
+te
+log
