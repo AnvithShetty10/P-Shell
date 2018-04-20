@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <limits.h>
+#include <signal.h>
 
 /* -------------------- Macros -------------------- */
 #define RESET   "\033[0m"
@@ -41,6 +42,7 @@
 #define WRITE_END 1     /* write end for unnamed pipes */
 
 #define digit_to_char(d) (48+d)	/*convert digits to char for itoa*/
+#define IS_CTRL_KEY(k) ((k) & 0x1f)
 
 /* -------------------- Globals -------------------- */
 struct alias
@@ -53,6 +55,9 @@ char histPath[PATH_MAX];
 char helpPath[PATH_MAX];
 
 char command[25][50],info[25][50];
+int shell_pid;
+
+
 /* -------------------- Function Prototypes -------------------- */
 
 /*
@@ -93,4 +98,8 @@ Returns 1 if background process. Else returns 0.
 int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr);
 
 int write_history(char *,int, pid_t);
+
+void setup_signals();
+void alarm_handler(int opt);
+
 #endif

@@ -28,6 +28,8 @@ char *check_input = NULL;
 char ***commands = NULL;
 /* ==================== Main ==================== */
 int main(int argc, char **argv) {
+    shell_pid = getpid();
+    setup_signals();
     print_welcome_message();
     hist_cmd_count=count_history();
         

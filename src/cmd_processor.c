@@ -54,6 +54,12 @@ char *processor(char *buf) {
                 fflush(stdout);
             }
         }
+        else if(fc[0] == IS_CTRL_KEY('c')) {
+            ; //do nothing
+        }
+        else if(fc[0] == IS_CTRL_KEY('z')) {
+            ; //do nothing
+        }
         else if (fc[0] == 27) { // if the first value is esc
             fc[1] = getPressedKey();
             if(fc[1] == 91){           //Can use '[' also
@@ -161,7 +167,8 @@ int set_terminal(){
     //cfmakeraw(&newt);
 
     newt.c_lflag &= ~ICANON; /* disable buffered i/o */
-    newt.c_lflag &= ~ECHO; /* set echo mode */
+    //newt.c_lflag &= ~ECHO; /* set echo mode */
+    newt.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG); 
     /* use these new terminal i/o settings now */
     if (tcsetattr(0, TCSANOW, &newt) != 0) {
         perror("Couldn't set terminal properties!");

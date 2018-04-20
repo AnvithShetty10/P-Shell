@@ -6,6 +6,7 @@ This file contains the functions of Pista shell itself. `psh` delegates work to 
 #include "pista_main.h"
 #include "cmd_processor.h"
 int _a = 1;
+int timed_cmd = 0;
 
 
 /* -------------------- Function Definitions -------------------- */
@@ -95,6 +96,7 @@ int pista_command(char **cmd_args) {
     char *temp = NULL;
     char *temp_al_val=cmd_args[1];
     char *temp_al_key=NULL;
+    timed_cmd = 0;
 
     // CHPROMPT IS 1
     if (strcmp(cmd_args[0], "chprompt") == 0) {
@@ -236,6 +238,20 @@ int pista_command(char **cmd_args) {
         error_log("PISTA COMMAND 8!");
         return 5;
     }    
+    else if (!strcmp(cmd_args[0], "timeout")) {
+        error_log("timeout matched!");
+        int timeoutVal = cmd_args[1] != NULL ? atoi(cmd_args[1]) : 0;
+        error_log("timeout %d", timeoutVal);
+        if(timeoutVal > 0) {
+            int t = 0;
+            while(cmd_args[t+2] != NULL) {
+                cmd_args[t] = cmd_args[t+2];
+                t++;
+            }
+            cmd_args[t] = NULL;
+            timed_cmd = timeoutVal;
+        }
+    }
     
     // wildcard * or ? at end
     else if (cmd_args[1] != NULL) {
@@ -657,6 +673,22 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
     else {
         error_log("pid = %d", pid);
         children[curr] = pid;
+        if(timed_cmd) {
+            error_log("setting up alarmer");
+            if(fork() == 0) {
+                char buf[100];
+                strcpy(buf, "kill -14 ");
+                if(cmd_args[0] == NULL)
+                    strcat(buf, itoa(shell_pid));
+                else
+                    strcat(buf, itoa(pid));
+                error_log("setting up alarmer %s", buf);
+                sleep(timed_cmd);
+                system(buf);
+                _exit(0);
+            }
+            timed_cmd = 0;
+        }
     }
 
     return bg;
@@ -737,3 +769,24 @@ char **handle_redirections(char **cmd_args) {
     return ret;
 }
 
+
+void setup_signals() {
+    struct sigaction sa;
+    sigset_t ss;
+    sigemptyset(&ss);
+    sigaddset(&ss, SIGTERM);
+    sigaddset(&ss, SIGINT);
+    sigaddset(&ss, SIGTSTP);
+    sigprocmask(SIG_BLOCK, &ss, NULL);
+    //signal(SIGTSTP, SIG_IGN);
+
+    sa.sa_handler = alarm_handler;
+    sa.sa_flags = SA_RESTART;
+    if(sigaction(SIGALRM, &sa, NULL) < 0)
+        perror("sigaction fail");
+}
+
+void alarm_handler(int opt) {
+    printf("\aALARM!\n");
+    fflush(stdout);
+}
