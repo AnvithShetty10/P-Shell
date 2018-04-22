@@ -43,6 +43,7 @@ char *processor(char *buf) {
     int blen = 0;
     char fc[4];
     int stop_right = 0;
+    char tbuf[1000] = {0};
     fc[0] = getPressedKey();
     error_log("got fc0 as %c %d", fc[0], fc[0]);
     while(fc[0] != '\n' && fc[0] != '\r') {
@@ -66,6 +67,10 @@ char *processor(char *buf) {
                 fc[2] = getPressedKey();
                 switch(fc[2]) { 
                     case 'A':
+                        if(curr == 0) {
+                            strcpy(tbuf, buf);
+                            error_log("copied %s to tbuf", buf);
+                        }
                         if(curr!=hist_cmd_count)
                             {
                             clear_prompt_up();
@@ -76,15 +81,21 @@ char *processor(char *buf) {
                             }
                         break;
                     case 'B':
+                        error_log("case B down array with curr %d", curr);
                         if(curr!=0){
                             clear_prompt_down();
                             DownArrow();
-                            strcpy(buf,hist_command[curr+1]);
+                            strcpy(buf,hist_command[curr]);
                             blen = strlen(buf);
                             fflush(stdout);
                         }
-                        else if(curr==0){
+                        error_log("down curr %d", curr);
+                        if(curr<=0){
                             clear_prompt_down();
+                            strcpy(buf, tbuf);
+                            blen = strlen(buf);
+                            error_log("copied %s to buf", tbuf);
+                            printf("%s", buf);
                             fflush(stdout);
                         }
                         break;
