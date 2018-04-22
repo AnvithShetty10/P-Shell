@@ -61,8 +61,8 @@ int main(int argc, char **argv) {
         if(strlen(buf)>0 && _prompt_type < 3){
         write_history(buf,current,getpid());        
         }
-        error_log("Input taken : %p %s %d %d %d", check_input, buf, len, len > 1, check_input && len > 1);
-        if(check_input && len > 1) {
+        error_log("Input taken : %p %s %d %d %d", check_input, buf, len, len > 0, check_input && len > 0);
+        if(check_input && len > 0) {
             error_log("Processing the command...");
             //buf[len-1] = 0;     // remove trailing \n
             execute_command(check_input);    

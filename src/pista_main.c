@@ -416,7 +416,7 @@ int pista_command(char **cmd_args) {
 
 int is_alias(char *key) {
     int i;
-    for(i = 0 ; i < 5 ; i++)
+    for(i = 0 ; i < _a ; i++)
         if(!strcmp(key, al[i].keys))
             return i;
 
