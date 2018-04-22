@@ -236,7 +236,7 @@ int pista_command(char **cmd_args) {
         remove(histPath);   
         hist_cmd_count=0;
         error_log("PISTA COMMAND 8!");
-        return 5;
+        return 8;
     }    
     else if (!strcmp(cmd_args[0], "timeout")) {
         error_log("timeout matched!");
@@ -259,6 +259,11 @@ int pista_command(char **cmd_args) {
             }
             cmd_args[t] = NULL;
         }
+    }
+    else if (!strcmp(cmd_args[0], "incog")) {
+        error_log("incog matched!");
+        error_log("PISTA COMMAND 9!");
+        return 9;
     }
     
     // wildcard * or ? at end

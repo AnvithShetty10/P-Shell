@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
         check_input = processor(buf);
         len = strlen(buf);
         current = (current + 1) % HISTORY_COUNT;
-        if(strlen(buf)>0){
+        if(strlen(buf)>0 && _prompt_type < 3){
         write_history(buf,current,getpid());        
         }
         error_log("Input taken : %p %s %d %d %d", check_input, buf, len, len > 1, check_input && len > 1);
@@ -99,12 +99,29 @@ void execute_command(char *buf){
             commands = parse_commands(buf);
             switch(pista_delegate(commands)) {
                 case 1:
-                    _prompt_type = !_prompt_type;
+                    switch(_prompt_type) {
+                        case 0: case 1:
+                            _prompt_type = !_prompt_type;
+                            break;
+                        case 3:
+                            _prompt_type++;
+                            break;
+
+                        case 4:
+                            _prompt_type--;
+                            break;
+                    }
                     break;
 
                 case 2:
                     check_input = NULL;
                     break;
+
+                case 9:
+                    if(_prompt_type < 3)
+                        _prompt_type = _prompt_type + 3;
+                    else
+                        _prompt_type = _prompt_type - 3;
                 
                 default:
                     strcpy(buf, "");
@@ -168,23 +185,28 @@ void print_prompt() {
 
     // Constructing the prompt...
     switch(_prompt_type) {
-        case 0:
+        case 0: case 3:
         
             strcpy(temp, getlogin());
             strcat(temp, ":");
             strcat(temp, cwd);
             strcat(temp, " => \0");
-            printf(GREEN "%s" RESET, temp);
+            if(_prompt_type == 0)
+                printf(GREEN "%s" RESET, temp);
+            if(_prompt_type == 3)
+                printf(BOLDWHITE "%s" RESET, temp);
             break;
             
-        case 1: 
+        case 1: case 4:
         	
         	strcpy(temp, cwd);
             strcat(temp, "-->> \0");
             dirc = strdup(temp);
             dname = basename(dirc);
-		
-            printf(GREEN "%s" RESET, dname);
+            if(_prompt_type == 1)
+                printf(GREEN "%s" RESET, dname);
+            if(_prompt_type == 4)
+                printf(BOLDWHITE "%s" RESET, dname);
         	break;
     }
 
