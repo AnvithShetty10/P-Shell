@@ -266,147 +266,97 @@ int pista_command(char **cmd_args) {
         return 9;
     }
     
-    // wildcard * or ? at end
-    else if (cmd_args[1] != NULL) {
-        error_log("Going to check for wildcard");
-        if(!strcmp(cmd_args[0], "ls") && ((cmd_args[1][strlen(cmd_args[1])-1]=='*') || (cmd_args[1][strlen(cmd_args[1])-1]=='?'))) {
-    	
-    		char rem[20];
-			int q=0, k=0, p=0;
-			char temp_fname[30];
-			int fname_len=0;
-			int cmd_len=0, rem_len=0;
-			
-			cmd_len=strlen(cmd_args[1]);
-    		char *path=".";
-			DIR *dirp=opendir(path);
-			struct dirent *dp;
-	
-			for(q=0; q<cmd_len-1; q++)
-			{
-				rem[k++]=cmd_args[1][q];
-			}
-			rem_len=strlen(rem);
-			
-			if(cmd_args[1][strlen(cmd_args[1])-1]=='*')
-			{
-				while((dp=readdir(dirp)) != NULL)
-				{
-					int ctr=0;
-					strcpy(temp_fname, dp->d_name);
-			
-				
-					for(p=0; p<rem_len; p++)
-					{
-						if(temp_fname[p]==rem[p])
-						{
-							ctr++;
-						}
-					}
-				
-					if(ctr==rem_len)
-					{
-						printf("%s\n",dp->d_name);
-					}
-				}	
-			}
-			
-			else if(cmd_args[1][strlen(cmd_args[1])-1]=='?')
-			{
-				while((dp=readdir(dirp)) != NULL)
-				{
-					int ctr2=0;
-					strcpy(temp_fname, dp->d_name);
-					fname_len=strlen(temp_fname);
-				
-					for(p=0; p<rem_len; p++)
-					{
-						if(temp_fname[p]==rem[p])
-						{
-							ctr2++;
-						}
-					}
-				
-					if((ctr2==rem_len) && (fname_len==(rem_len+1)))
-					{
-						printf("%s\n",dp->d_name);
-					}
-				}	
-			}
-			
-       		error_log("Wildcard matched!");
+    // wildcard * or ? in the end
+       else if((cmd_args[1] != NULL) && ((cmd_args[1][strlen(cmd_args[1])-1]=='*') || (cmd_args[1][strlen(cmd_args[1])-1]=='?'))) {
+       error_log("Going to check for wildcard");
+       FILE *fp;
+       char path[50];
+    
+       char rem[20];
+       int cmd_len=0, q=0,k=0, p_len=0;
+       char comm[40];
+    
+       strcpy(path," ");
+       strcpy(rem," ");
+       strcpy(comm," ");
+            
+        cmd_len=strlen(cmd_args[1]);
+    
+        for(q=0; q<cmd_len-1; q++)
+        {
+            rem[k++]=cmd_args[1][q];
         }
-       	 // wildcard * or ? at beginning
-    else if (!strcmp(cmd_args[0], "ls") && ((cmd_args[1][0]=='*') || (cmd_args[1][0]=='?'))) {
-    	
-    		char rem[20];
-			int q=0, k=0, p=0;
-			char temp_fname[30];
-			int fname_len=0;
-			int cmd_len=0, rem_len=0;
-			
-			cmd_len=strlen(cmd_args[1]);
-    		char *path=".";
-			DIR *dirp=opendir(path);
-			struct dirent *dp;
-	
-			for(q=1; q<cmd_len; q++)
-			{
-				rem[k++]=cmd_args[1][q];
-			}
-			rem_len=strlen(rem);
-			
-			if(cmd_args[1][0]=='*')
-			{
-				while((dp=readdir(dirp)) != NULL)
-				{
-					int ctr=0,m=0;
-					strcpy(temp_fname, dp->d_name);
-					fname_len=strlen(temp_fname);
-					
-				
-					for(p=(fname_len-rem_len); p<fname_len; p++)
-					{
-						if(temp_fname[p]==rem[m++])
-						{
-							ctr++;
-						}
-					}
-					if(ctr==rem_len)
-					{
-						printf("%s\n",dp->d_name);
-					}
-				}	
-			}
-			
-			else if(cmd_args[1][0]=='?')
-			{
-				while((dp=readdir(dirp)) != NULL)
-				{
-					int ctr2=0, n=0;
-					strcpy(temp_fname, dp->d_name);
-					fname_len=strlen(temp_fname);
-				
-					for(p=(fname_len-rem_len); p<fname_len; p++)
-					{
-						if(temp_fname[p]==rem[n++])
-						{
-							ctr2++;
-						}
-					}
-				
-					if((ctr2==rem_len) && (fname_len==(rem_len+1)))
-					{
-						printf("%s\n",dp->d_name);
-					}
-				}	
-			}
-			
-       		error_log("Wildcard matched!");
-        }  
-
-       	
-    }  
+        rem[k]='\0';
+        //printf("%s\n",rem );
+       
+        if(cmd_args[1][cmd_len-1]=='*'){
+        strcpy(comm, "ls | grep ^");
+        strcat(comm, rem);
+        //printf("%s\n",comm);
+        fp=popen(comm,"r");
+        while(fgets(path, 50, fp)!=NULL)
+        printf("%s", path);
+        }
+        
+        else if(cmd_args[1][cmd_len-1]=='?'){
+        strcpy(comm, "ls | grep ");
+        strcat(comm, rem);
+        strcat(comm,".");
+        fp=popen(comm,"r");
+        while(fgets(path, 50, fp)!=NULL){
+           p_len=strlen(path);
+           if(p_len==(cmd_len+1)){
+           printf("%s", path);
+           }
+        }
+        }
+       
+       pclose(fp);
+        }
+     
+       // wildcard * or ? in the beginning
+       else if((cmd_args[1] != NULL) && ((cmd_args[1][0]=='*') || (cmd_args[1][0]=='?'))) {
+       error_log("Going to check for wildcard");
+       FILE *fp;
+       char path[50];
+       char rem[20];
+       int cmd_len=0, q=0,k=0, p_len=0;
+       char comm[40];
+    
+       strcpy(path," ");
+       strcpy(rem," ");
+       strcpy(comm," ");
+            
+        cmd_len=strlen(cmd_args[1]);
+    
+       for(q=1; q<cmd_len; q++)
+       {
+             rem[k++]=cmd_args[1][q];
+       }
+        rem[k]='\0';
+       
+        if(cmd_args[1][0]=='*'){
+        strcpy(comm, "ls | grep ");
+        strcat(comm, rem);
+        strcat(comm,"$");
+        fp=popen(comm,"r");
+       	while(fgets(path, 50, fp)!=NULL)
+           printf("%s", path);
+        }
+        else if(cmd_args[1][0]=='?'){
+        strcpy(comm, "ls | grep .");
+        strcat(comm, rem);
+        fp=popen(comm,"r");
+        while(fgets(path, 50, fp)!=NULL){
+           p_len=strlen(path);
+           if(p_len==(cmd_len+1)){
+           printf("%s", path);
+           }
+        }
+        }
+         
+       pclose(fp);
+        }
     
     // NO PISTA COMMAND!
     error_log("PISTA COMMAND 0!");
