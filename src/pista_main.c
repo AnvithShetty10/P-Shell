@@ -92,7 +92,8 @@ int write_history(char *buf,int current,pid_t pid){
 }
 
 
-int pista_command(char **cmd_args) {
+int pista_command(char ***_cmd_args) {
+    char **cmd_args = *_cmd_args;
     char *temp = NULL;
     char *temp_al_val=cmd_args[1];
     char *temp_al_key=NULL;
@@ -290,12 +291,49 @@ int pista_command(char **cmd_args) {
         //printf("%s\n",rem );
        
         if(cmd_args[1][cmd_len-1]=='*'){
-        strcpy(comm, "ls | grep ^");
-        strcat(comm, rem);
-        //printf("%s\n",comm);
-        fp=popen(comm,"r");
-        while(fgets(path, 50, fp)!=NULL)
-        printf("%s", path);
+            strcpy(comm, "ls | grep ^");
+            strcat(comm, rem);
+            //printf("%s\n",comm);
+            fp=popen(comm,"r");
+            cmd_args[1][0] = 0;
+            while(fgets(path, 50, fp)!=NULL) {
+                //printf("%s", path);
+                error_log("end wildcard path %s", path);
+                path[strlen(path)-1] = ' ';
+                strcat(cmd_args[1], path);
+                error_log("end wildcard cmd 1 %s", cmd_args[1]);
+            }
+            cmd_args[1][strlen(cmd_args[1])-1] = 0;
+            {
+                char *tempbuf = (char *)malloc(sizeof(char) * 1024);
+                tempbuf[0] = 0;
+                char **ttemp = cmd_args;
+                int count = 0;
+                while(*ttemp != NULL) {
+                    error_log("ttemp %s %d", *ttemp, *ttemp[0]);
+                    if(*ttemp[0]) {
+                        strcat(tempbuf, *(ttemp++));
+                        strcat(tempbuf, " ");
+                        count++;
+                    }
+                    else
+                        ttemp++;
+                }
+
+                if(count == 1) {
+                    strcat(tempbuf, rem);
+                    strcat(tempbuf, "*");
+                }
+                else {
+                    error_log("count %d", count);
+                }
+                
+                error_log("fixed wildcard : %s", tempbuf);
+                cmd_args = parse_cmd_args(tempbuf);
+                *_cmd_args = cmd_args;
+                //printf("%s\n", cmd_args[2]);
+            }
+            error_log("tok cmd 1 %s", cmd_args[1]);
         }
         
         else if(cmd_args[1][cmd_len-1]=='?'){
@@ -303,12 +341,42 @@ int pista_command(char **cmd_args) {
         strcat(comm, rem);
         strcat(comm,".");
         fp=popen(comm,"r");
+        cmd_args[1][0] = 0;
         while(fgets(path, 50, fp)!=NULL){
            p_len=strlen(path);
            if(p_len==(cmd_len+1)){
-           printf("%s", path);
+           //printf("%s", path);
+            path[strlen(path)-1] = 0;
+            strcat(cmd_args[1], path);
            }
         }
+        {
+                char *tempbuf = (char *)malloc(sizeof(char) * 1024);
+                tempbuf[0] = 0;
+                char **ttemp = cmd_args;
+                int count = 0;
+                while(*ttemp != NULL) {
+                    error_log("ttemp %s %d", *ttemp, *ttemp[0]);
+                    if(*ttemp[0]) {
+                        strcat(tempbuf, *(ttemp++));
+                        strcat(tempbuf, " ");
+                        count++;
+                    }
+                    else
+                        ttemp++;
+                }
+
+                if(count == 1) {
+                    strcat(tempbuf, rem);
+                    strcat(tempbuf, "?");
+                }
+                else 
+                    {error_log("count %d", count);}
+                
+                error_log("fixed wildcard : %s", tempbuf);
+                cmd_args = parse_cmd_args(tempbuf);
+                *_cmd_args = cmd_args;
+            }
         }
        
        pclose(fp);
@@ -336,23 +404,86 @@ int pista_command(char **cmd_args) {
         rem[k]='\0';
        
         if(cmd_args[1][0]=='*'){
-        strcpy(comm, "ls | grep ");
-        strcat(comm, rem);
-        strcat(comm,"$");
-        fp=popen(comm,"r");
-       	while(fgets(path, 50, fp)!=NULL)
-           printf("%s", path);
+            strcpy(comm, "ls | grep ");
+            strcat(comm, rem);
+            strcat(comm,"$");
+            fp=popen(comm,"r");
+            cmd_args[1][0] = 0;
+            while(fgets(path, 50, fp)!=NULL) {
+            //printf("%s", path);
+                path[strlen(path)-1] = ' ';
+                strcat(cmd_args[1], path);
+            }
+            {
+                char *tempbuf = (char *)malloc(sizeof(char) * 1024);
+                tempbuf[0] = 0;
+                char **ttemp = cmd_args;
+                int count = 0;
+                while(*ttemp != NULL) {
+                    error_log("ttemp %s %d", *ttemp, *ttemp[0]);
+                    if(*ttemp[0]) {
+                        strcat(tempbuf, *(ttemp++));
+                        strcat(tempbuf, " ");
+                        //printf("%s\n", tempbuf);
+                        count++;
+                    }
+                    else
+                        ttemp++;
+                }
+
+                if(count == 1) {
+                    strcat(tempbuf, "*");
+                    strcat(tempbuf, rem);
+                }
+                else
+                    {error_log("count %d", count);}
+                
+                error_log("fixed wildcard : %s", tempbuf);
+                //printf("%s\n", tempbuf);
+                cmd_args = parse_cmd_args(tempbuf);
+                *_cmd_args = cmd_args;
+            }
         }
         else if(cmd_args[1][0]=='?'){
-        strcpy(comm, "ls | grep .");
-        strcat(comm, rem);
-        fp=popen(comm,"r");
-        while(fgets(path, 50, fp)!=NULL){
-           p_len=strlen(path);
-           if(p_len==(cmd_len+1)){
-           printf("%s", path);
-           }
-        }
+            strcpy(comm, "ls | grep .");
+            strcat(comm, rem);
+            fp=popen(comm,"r");
+            cmd_args[1][0] = 0;
+            while(fgets(path, 50, fp)!=NULL){
+                p_len=strlen(path);
+                if(p_len==(cmd_len+1)){
+                //printf("%s", path);
+                    path[strlen(path)-1] = 0;
+                    strcat(cmd_args[1], path);
+                }
+            }
+            {
+                char *tempbuf = (char *)malloc(sizeof(char) * 1024);
+                tempbuf[0] = 0;
+                char **ttemp = cmd_args;
+                int count = 0;
+                while(*ttemp != NULL) {
+                    error_log("ttemp %s %d", *ttemp, *ttemp[0]);
+                    if(*ttemp[0]) {
+                        strcat(tempbuf, *(ttemp++));
+                        strcat(tempbuf, " ");
+                        count++;
+                    }
+                    else
+                        ttemp++;
+                }
+
+                if(count == 1) {
+                    strcat(tempbuf, "?");
+                    strcat(tempbuf, rem);
+                }
+                else
+                    {error_log("count %d", count);}
+                
+                error_log("fixed wildcard : %s", tempbuf);
+                cmd_args = parse_cmd_args(tempbuf);
+                *_cmd_args = cmd_args;
+            }
         }
          
        pclose(fp);
@@ -382,19 +513,55 @@ int pista_command(char **cmd_args) {
             part1[w]=cmd_args[1][w];
             w++;
         }
+        part1[w] = 0;
         part2 += 1;
         
         if(cmd_args[1][w]=='*'){
-        strcpy(comm, "ls | grep ^");
-        strcat(comm,part1);
-        strcat(comm,".*");
-        strcat(comm,part2);
-        strcat(comm,"$");
-        //printf("*=%s\n",comm);
-        
-        fp=popen(comm,"r");
-        while(fgets(path, 50, fp)!=NULL)
-        printf("%s", path);
+            //strcpy(comm, "ls | grep ^");
+            strcpy(comm, "ls | grep ");
+            strcat(comm,part1);
+            strcat(comm,".*");
+            strcat(comm,part2);
+            //strcat(comm,"$");
+            //printf("*=%s\n",comm);
+            
+            fp=popen(comm,"r");
+            //printf("%s\n", comm);
+            cmd_args[1][0] = 0;
+            while(fgets(path, 50, fp)!=NULL) {
+                //printf("%s", path);
+                path[strlen(path)-1] = ' ';
+                strcat(cmd_args[1], path);
+            }
+            {
+                char *tempbuf = (char *)malloc(sizeof(char) * 1024);
+                tempbuf[0] = 0;
+                char **ttemp = cmd_args;
+                int count = 0;
+                while(*ttemp != NULL) {
+                    error_log("ttemp %s %d", *ttemp, *ttemp[0]);
+                    if(*ttemp[0]) {
+                        strcat(tempbuf, *(ttemp++));
+                        strcat(tempbuf, " ");
+                        count++;
+                    }
+                    else
+                        ttemp++;
+                }
+
+                if(count == 1) {
+                    strcat(comm,part1);
+                    strcat(comm,"*");
+                    strcat(comm,part2);
+                }
+                else
+                    {error_log("count %d", count);}
+                
+                error_log("fixed wildcard : %s", tempbuf);
+                //printf("%s\n", tempbuf);
+                cmd_args = parse_cmd_args(tempbuf);
+                *_cmd_args = cmd_args;
+            }
         }
         
         else if(cmd_args[1][w]=='?'){
@@ -406,9 +573,40 @@ int pista_command(char **cmd_args) {
         //printf("?=%s\n",comm);
 
         fp=popen(comm,"r");
+        cmd_args[1][0] = 0;
         while(fgets(path, 50, fp)!=NULL){
-           printf("%s", path);
+           //printf("%s", path);
+            path[strlen(path)-1] = ' ';
+            strcat(cmd_args[1], path);
         }
+        {
+                char *tempbuf = (char *)malloc(sizeof(char) * 1024);
+                tempbuf[0] = 0;
+                char **ttemp = cmd_args;
+                int count = 0;
+                while(*ttemp != NULL) {
+                    error_log("ttemp %s %d", *ttemp, *ttemp[0]);
+                    if(*ttemp[0]) {
+                        strcat(tempbuf, *(ttemp++));
+                        strcat(tempbuf, " ");
+                        count++;
+                    }
+                    else
+                        ttemp++;
+                }
+
+                if(count == 1) {
+                    strcat(comm,part1);
+                    strcat(comm,"?");
+                    strcat(comm,part2);
+                }
+                else
+                    {error_log("count %d", count);}
+                
+                error_log("fixed wildcard : %s", tempbuf);
+                cmd_args = parse_cmd_args(tempbuf);
+                *_cmd_args = cmd_args;
+            }
         }
        
        pclose(fp);   
@@ -427,6 +625,59 @@ int is_alias(char *key) {
             return i;
 
     return -1;
+}
+
+
+char **extend_cmd_args(char **cmd_args) {
+    error_log("Extending cmd args");
+    int count = 0, i = 0;
+    char *temp = cmd_args[0];
+    while(temp != NULL)
+        temp = cmd_args[++count];
+
+    temp = cmd_args[1];
+    i = 1;
+    if(i > count)
+        cmd_args = (char **)realloc(cmd_args, sizeof(char *) * i);
+
+    do {
+        error_log("before tok do while");
+        if(i > count) {
+            cmd_args = (char **)realloc(cmd_args, sizeof(char *) * i);
+            error_log("realloced cmd args");
+        }
+        if(cmd_args == NULL)
+            perror("cmd args extending error");
+        else error_log("cmd_args length is %d", i);
+
+        cmd_args[i++] = temp;
+        error_log("cmd_args is %s", cmd_args[i-1]);
+
+        tokenize(&temp);
+        error_log("temp is %d; %p; %s", i, temp, temp);
+
+        if(temp == NULL) {
+            error_log("cmd_args is %s", cmd_args[i-2]);
+            break;
+        }
+
+    }while(temp);
+
+    if(i > count) {
+            cmd_args = (char **)realloc(cmd_args, sizeof(char *) * i);
+            error_log("realloced cmd args");
+        }
+        if(cmd_args == NULL)
+            perror("cmd args extending error");
+        else error_log("cmd_args length is %d", i);
+
+    cmd_args[i-1] = NULL;
+
+    error_log("extended cmd args to %d", i);
+    char **tt = cmd_args;
+    while(*tt != NULL)
+        error_log("extended cmd_args : %s", *(tt++));
+    return cmd_args;
 }
 
 
@@ -510,7 +761,7 @@ int pista_delegate(char ***commands) {
         else { perror("PIPES REALLOC ERROR"); _exit(errno); }
 
 
-        if( !(temp = pista_command(cmd_args)) ) {
+        if( !(temp = pista_command(&cmd_args)) ) {
             if(i == 0 && commands[i+1] == NULL) { // first and last
                 error_log("first and last command");
                 // handle input
@@ -637,6 +888,8 @@ int pista_delegate(char ***commands) {
 
 
 int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fdout, int **pipes, int *children, int curr) {
+    error_log("SPAWNING");
+
     pid_t pid;
     
     int bg = 0;
@@ -675,6 +928,13 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
         case 2: case 3: case 4:
             break;
         }
+
+        #ifdef DEBUG_MODE
+        char **tt = cmd_args;
+        while(*tt != NULL) {
+            error_log("cmd-args %s", *(tt++));
+        }
+        #endif
 
         int check_exec = execvp(cmd_args[0], cmd_args);
 

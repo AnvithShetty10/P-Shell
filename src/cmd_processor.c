@@ -492,9 +492,14 @@ void tokenize(char **s_) {
             case ' ': case '\t':
                 s[i] = 0;
                 *s_ = s + i + 1;
+                error_log("1token : %s", *s_);
                 return;
+            
+            case 0:
+                break;
         }
     }
 
     *s_ = NULL;
+    error_log("2token : %s", *s_);
 }

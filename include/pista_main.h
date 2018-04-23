@@ -63,7 +63,7 @@ int shell_pid;
 /*
 Process pista's command's!
 */
-int pista_command(char **cmd_args);
+int pista_command(char ***_cmd_args);
 
 /*
 Returns the index of the key in the alias table. If not found, returns -1
@@ -101,5 +101,6 @@ int write_history(char *,int, pid_t);
 
 void setup_signals();
 void alarm_handler(int opt);
+char **extend_cmd_args(char **cmd_args);
 
 #endif
