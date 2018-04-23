@@ -357,6 +357,62 @@ int pista_command(char **cmd_args) {
          
        pclose(fp);
         }
+        //wildcard * or ? in between
+        else if((cmd_args[1]!=NULL) && ((strchr(cmd_args[1],'*')!=NULL) || (strchr(cmd_args[1],'?')!=NULL))){
+         error_log("Going to check for wildcard");
+       FILE *fp;
+       char path[50];
+        char *part2;
+        char part1[20];
+       int cmd_len=0,w=0;
+       char comm[40];
+    
+       strcpy(path," ");
+       strcpy(comm," ");
+            
+        cmd_len=strlen(cmd_args[1]);
+    
+        
+        if(strchr(cmd_args[1],'*')!=NULL)
+            part2=strchr(cmd_args[1],'*');  
+        else if(strchr(cmd_args[1],'?')!=NULL)
+            part2=strchr(cmd_args[1],'?');
+
+        while(w<(part2-cmd_args[1])){
+            part1[w]=cmd_args[1][w];
+            w++;
+        }
+        part2 += 1;
+        
+        if(cmd_args[1][w]=='*'){
+        strcpy(comm, "ls | grep ^");
+        strcat(comm,part1);
+        strcat(comm,".*");
+        strcat(comm,part2);
+        strcat(comm,"$");
+        //printf("*=%s\n",comm);
+        
+        fp=popen(comm,"r");
+        while(fgets(path, 50, fp)!=NULL)
+        printf("%s", path);
+        }
+        
+        else if(cmd_args[1][w]=='?'){
+        strcpy(comm, "ls | grep ^");
+        strcat(comm,part1);
+        strcat(comm,".");
+        strcat(comm,part2);
+        strcat(comm,"$");
+        //printf("?=%s\n",comm);
+
+        fp=popen(comm,"r");
+        while(fgets(path, 50, fp)!=NULL){
+           printf("%s", path);
+        }
+        }
+       
+       pclose(fp);   
+        }
     
     // NO PISTA COMMAND!
     error_log("PISTA COMMAND 0!");
