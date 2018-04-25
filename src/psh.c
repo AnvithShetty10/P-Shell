@@ -127,7 +127,7 @@ void execute_command(char *buf){
                     strcpy(buf, "");
             }
 
-            free(commands);
+            //free(commands);
 }
 
 void print_welcome_message() {

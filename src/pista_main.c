@@ -266,6 +266,21 @@ int pista_command(char ***_cmd_args) {
         error_log("PISTA COMMAND 9!");
         return 9;
     }
+    else if (!strcmp(cmd_args[0], "sgown")) {
+        char *sgownbuf = (char *)malloc(sizeof(char) * 1024);
+        //char sgownbuf[1024] = "grep -r -n ";
+        char suffix[20] = " . | cut -f1,2 -d:";
+        
+        strcpy(sgownbuf, "grep -r -n ");
+        strcat(sgownbuf, "\"");
+        strcat(sgownbuf, cmd_args[1]);
+        strcat(sgownbuf, "\"");
+        strcat(sgownbuf, suffix);
+        //printf("%s", sgownbuf);
+        execute_command(sgownbuf);
+
+        return -1;
+    }
     
     // wildcard * or ? in the end
        else if((cmd_args[1] != NULL) && ((cmd_args[1][strlen(cmd_args[1])-1]=='*') || (cmd_args[1][strlen(cmd_args[1])-1]=='?'))) {
@@ -883,6 +898,7 @@ int pista_delegate(char ***commands) {
     free(pipes);
     free(children);
 
+    error_log("returning with status");
     return status;
 }
 
@@ -907,6 +923,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
         perror("fork error");
     }
     else if (pid == 0) {
+        alarm(timed_cmd);
         if(dup2(fdin, STDIN_FILENO) < 0) perror("dup2 of input failed");
         close(fdin);
         switch (instate) {
@@ -932,7 +949,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
         #ifdef DEBUG_MODE
         char **tt = cmd_args;
         while(*tt != NULL) {
-            error_log("cmd-args %s", *(tt++));
+            error_log("ch cmd-args %s", *(tt++));
         }
         #endif
 
@@ -952,7 +969,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
     else {
         error_log("pid = %d", pid);
         children[curr] = pid;
-        if(timed_cmd) {
+        /*if(timed_cmd) {
             error_log("setting up alarmer");
             if(fork() == 0) {
                 char buf[100];
@@ -966,8 +983,8 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
                 system(buf);
                 _exit(0);
             }
-            timed_cmd = 0;
-        }
+        }*/
+        timed_cmd = 0;
     }
 
     return bg;

@@ -402,8 +402,9 @@ char **parse_cmd_args(char *full_cmd) {
         }
 
         tokenize(&temp);
+        error_log("After tokenize %s", temp);
 
-        // If string is given in quotes, remove the quotes
+        /*// If string is given in quotes, remove the quotes
         int index, len = strlen(ret[count-1]), jindex;
         for(index = 0 ; index < len ; index++) {
             if(ret[count-1][index] == '"')      // Check for quotes "
@@ -414,9 +415,21 @@ char **parse_cmd_args(char *full_cmd) {
             }
         }
 
-        ret[count-1][len] = 0;      // set new nul char to terminate string
+        ret[count-1][len] = 0;      // set new nul char to terminate string*/
 
     }while(temp);
+
+    if(temp && strlen(temp) > 0) {
+        check = realloc(ret, sizeof(char *) * (++count));
+        if(check)
+            ret = check;
+        else {
+            perror("FAILED TO REALLOC TABLE OF CMD AND ARGS 2");
+            return NULL;
+        }
+    }
+
+        ret[count - 1] = temp;
 
     check = realloc(ret, sizeof(char *) * (++count));
     if(check)
@@ -482,11 +495,32 @@ char ***parse_commands(char *full_cmd) {
 void tokenize(char **s_) {
     char *s = *s_;
     int i;
+    int looped = 0;
+
+    if(s[0] == 0) {
+        *s_ = NULL;
+        error_log("5token : %s", *s_);
+        return;
+    }
 
     for(i = 0 ; s[i] ; i++) {
+        error_log("tokchar %c %d", s[i], s[i]);
+        looped = 1;
         switch(s[i]) {
             case '"':
-                for( ; s[i] == '"' || s[i] ; i++);
+                error_log("quote at %d", i);
+                for(i = i + 1 ; s[i] != '"' && s[i] ; i++);
+                error_log("equote at %d", i);
+                if(s[i]) {
+                    s[i+1] = 0;
+                    *s_ = s + i + 2;
+                    return;
+                }
+                else {
+                    *s_ = NULL;
+                    return;
+                }
+                error_log("3token : %s", *s_);
             break;
 
             case ' ': case '\t':
@@ -500,6 +534,9 @@ void tokenize(char **s_) {
         }
     }
 
-    *s_ = NULL;
+    if(looped)
+        *s_ = s + i;
+    else
+        *s_ = NULL;
     error_log("2token : %s", *s_);
 }
