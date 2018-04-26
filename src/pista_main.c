@@ -268,6 +268,7 @@ int pista_command(char ***_cmd_args) {
     }
     else if (!strcmp(cmd_args[0], "sgown")) {
         if(cmd_args[1] != NULL) {
+            /*
             char *sgownbuf = (char *)malloc(sizeof(char) * 1024);
             //char sgownbuf[1024] = "grep -r -n ";
             char suffix[20] = " . | cut -f1,2 -d:";
@@ -278,7 +279,18 @@ int pista_command(char ***_cmd_args) {
             strcat(sgownbuf, "\"");
             strcat(sgownbuf, suffix);
             //printf("%s", sgownbuf);
-            execute_command(sgownbuf);
+            execute_command(sgownbuf);*/
+            int p;
+            if((p = fork()) == 0) {
+                if(execl("/bin/grep", "grep", "-R" , "-n", cmd_args[1], ".", NULL) <0) {
+                    printf("END\n");
+                    exit(0);
+                }
+                _exit(0);
+            }
+            else {
+                wait(NULL);
+            }
         }
         else {
             printf(RED "No query string provided!\n" RESET);
@@ -972,7 +984,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
         exit(0);
     }
     else {
-        error_log("pid = %d", pid);
+        error_log("%s pid = %d", cmd_args[0], pid);
         children[curr] = pid;
         /*if(timed_cmd) {
             error_log("setting up alarmer");
