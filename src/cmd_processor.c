@@ -47,6 +47,7 @@ char *processor(char *buf) {
     fc[0] = getPressedKey();
     error_log("got fc0 as %c %d", fc[0], fc[0]);
     while(fc[0] != '\n' && fc[0] != '\r') {
+        error_log("got %d", fc[0]);
         if (fc[0]==127)
         {   
             if(blen>0){
@@ -54,6 +55,55 @@ char *processor(char *buf) {
                 printf("\b \b");
                 fflush(stdout);
             }
+        }
+        else if(fc[0] == 9) {   // handle tabs
+            error_log("tabs");
+            char searchFor[500];
+            int temp_blen = blen - 1;
+
+            if(temp_blen > 0) {
+                error_log("here tab");
+
+            while(buf[temp_blen] != ' ' && temp_blen > 0)
+                temp_blen--;
+
+            error_log("temp blen %d %d", temp_blen, blen);
+            
+            strcpy(searchFor, "ls | grep ");
+            buf[blen] = 0;
+            buf[blen + 1] = 0;
+            if(temp_blen)
+                temp_blen++;
+            
+            strcat(searchFor, buf + temp_blen);
+            
+            error_log("tab searching for %s", searchFor);
+
+            FILE *op = popen(searchFor, "r");
+
+            char sop[100];
+            if(fgets(sop, 100, op) != NULL) {
+                error_log("tab got %s", sop);
+                int i;
+                restore_terminal();
+                for(i = 0 ; sop[i] != '\0' && sop[i] == buf[temp_blen] ; i++, temp_blen++);
+
+                for(; sop[i] != '\0' && sop[i] != '\n' ; i++) {
+                    buf[blen++] = sop[i];
+                    printf("%c", sop[i]);
+                }
+                fflush(stdout);
+                set_terminal();
+            }
+            else {
+                if(blen>0){
+                    blen--;
+                    printf("\b \b");
+                    fflush(stdout);
+                }
+            }
+            }
+
         }
         else if(fc[0] == IS_CTRL_KEY('c')) {
             ; //do nothing
@@ -63,8 +113,10 @@ char *processor(char *buf) {
         }
         else if (fc[0] == 27) { // if the first value is esc
             fc[1] = getPressedKey();
+            error_log("got 1 %d", fc[1]);
             if(fc[1] == 91){           //Can use '[' also
                 fc[2] = getPressedKey();
+                error_log("got 2 %d", fc[2]);
                 switch(fc[2]) { 
                     case 'A':
                         if(curr == 0) {

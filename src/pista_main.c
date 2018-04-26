@@ -267,17 +267,22 @@ int pista_command(char ***_cmd_args) {
         return 9;
     }
     else if (!strcmp(cmd_args[0], "sgown")) {
-        char *sgownbuf = (char *)malloc(sizeof(char) * 1024);
-        //char sgownbuf[1024] = "grep -r -n ";
-        char suffix[20] = " . | cut -f1,2 -d:";
-        
-        strcpy(sgownbuf, "grep -r -n ");
-        strcat(sgownbuf, "\"");
-        strcat(sgownbuf, cmd_args[1]);
-        strcat(sgownbuf, "\"");
-        strcat(sgownbuf, suffix);
-        //printf("%s", sgownbuf);
-        execute_command(sgownbuf);
+        if(cmd_args[1] != NULL) {
+            char *sgownbuf = (char *)malloc(sizeof(char) * 1024);
+            //char sgownbuf[1024] = "grep -r -n ";
+            char suffix[20] = " . | cut -f1,2 -d:";
+            
+            strcpy(sgownbuf, "grep -r -n ");
+            strcat(sgownbuf, "\"");
+            strcat(sgownbuf, cmd_args[1]);
+            strcat(sgownbuf, "\"");
+            strcat(sgownbuf, suffix);
+            //printf("%s", sgownbuf);
+            execute_command(sgownbuf);
+        }
+        else {
+            printf(RED "No query string provided!\n" RESET);
+        }
 
         return -1;
     }

@@ -132,6 +132,15 @@ void execute_command(char *buf){
 
 void print_welcome_message() {
     system("cd sal-te && make compile");
+
+    char *shell = (char *)malloc(sizeof(char) * 512);
+    char temp[1000];
+    getcwd(temp, 1000);
+    strcpy(shell, "SHELL=");
+    strcat(shell, temp);
+    strcat(shell, "/psh");
+    putenv(shell);
+
     strcpy(histPath, getenv("HOME"));
     strcat(histPath, "/");
     strcat(histPath, HISTORY_FILE);
