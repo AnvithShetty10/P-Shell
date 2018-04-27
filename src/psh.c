@@ -41,10 +41,10 @@ int main(int argc, char **argv) {
     cwd_buf = getcwd(cwd_buf, 0);
     error_log("current : %s", cwd_buf);
     te_str = (char *)malloc(sizeof(char) * (strlen(cwd_buf) + 14));
-    strcpy(te_str, "\"");
+    //strcpy(te_str, "\"");
     strcat(te_str, cwd_buf);
     strcat(te_str,"/sal-te/te");
-    strcat(te_str, "\"");
+    //strcat(te_str, "\"");
     
     strcpy(al[0].keys,"te");
 	strcpy(al[0].values,te_str);

@@ -216,6 +216,12 @@ int pista_command(char ***_cmd_args) {
         if(cmd_args[1]) {
             temp_al_key=strsep(&temp_al_val, "=");
             strcpy(al[_a].keys, temp_al_key);
+            if(temp_al_val[0] == '"')
+                temp_al_val++;
+            
+            if(temp_al_val[strlen(temp_al_val)-1] == '"')
+                temp_al_val[strlen(temp_al_val)-1] = 0;
+
             strcpy(al[_a].values, temp_al_val);
             _a++;
         }
@@ -282,14 +288,14 @@ int pista_command(char ***_cmd_args) {
             execute_command(sgownbuf);*/
             int p;
             if((p = fork()) == 0) {
-                if(execl("/bin/grep", "grep", "-R" , "-n", cmd_args[1], ".", NULL) <0) {
+                if(execl("/usr/bin/grep", "grep", "-R" , "-n", cmd_args[1], ".", NULL) <0) {
                     printf("END\n");
                     exit(0);
                 }
                 _exit(0);
             }
             else {
-                wait(NULL);
+                waitpid(p, NULL, 0);
             }
         }
         else {
@@ -940,7 +946,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
         perror("fork error");
     }
     else if (pid == 0) {
-        alarm(timed_cmd);
+        //alarm(timed_cmd);
         if(dup2(fdin, STDIN_FILENO) < 0) perror("dup2 of input failed");
         close(fdin);
         switch (instate) {
@@ -986,7 +992,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
     else {
         error_log("%s pid = %d", cmd_args[0], pid);
         children[curr] = pid;
-        /*if(timed_cmd) {
+        if(timed_cmd) {
             error_log("setting up alarmer");
             if(fork() == 0) {
                 char buf[100];
@@ -1000,7 +1006,7 @@ int spawn_child_cmd(char **cmd_args, int instate, int fdin, int outstate, int fd
                 system(buf);
                 _exit(0);
             }
-        }*/
+        }
         timed_cmd = 0;
     }
 

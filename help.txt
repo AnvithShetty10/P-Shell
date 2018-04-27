@@ -3,11 +3,15 @@ Simple, bash-like shell built in C.
 
 These shell commands are defined internally.  Type `help' to see this list.
 
- history 
- alias [name[=value] ... ]
- cd [dir]
- echo [-n] [arg ...]
- exit
- export [name[=value] ...]
- fg
- help
+ history - display history
+ hc - clear history
+ alias name=value - create an aliased command by sepcifying key pair
+ cd [dir] - change directory
+ exit - exit the shell
+ export name=value - create environment variables
+ help - display help
+ chprompt - change prompt
+ incog - enter incognito mode
+ timeout seconds [command] - put a timer for [seconds] on the command, else print an ALARM on shell
+ clear - clear terminal window
+ sgown query - search all files in directory tree from current directory for query string
